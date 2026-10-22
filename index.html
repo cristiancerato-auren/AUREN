@@ -30,12 +30,41 @@ footer{background:#E9DCCF;padding:34px 0}.foot{display:flex;align-items:center;j
 
 @media(max-width:850px){.hero{grid-template-columns:1fr;gap:28px;padding-top:50px}.hero-visual,.hero-visual img{height:350px;min-height:350px}.search-panel{grid-template-columns:1fr 1fr}.search-panel .field:first-child{grid-column:1/-1}.search-panel .btn{width:100%}.listings{grid-template-columns:repeat(2,1fr)}.sell{grid-template-columns:1fr;gap:28px}.sell-art{height:300px}.navlinks{display:none}}
 @media(max-width:560px){.wrap{width:calc(100% - 28px)}header{height:68px}.brand{font-size:20px}.navright{gap:7px}.navright .btn{padding:10px 12px;font-size:11px}.hero{padding-top:38px}.hero h1{font-size:51px;letter-spacing:-2px}.hero-visual,.hero-visual img{height:280px;min-height:280px}.search-panel{grid-template-columns:1fr 1fr;padding:12px}.search-panel .field:first-child{grid-column:1/-1}.section-head{align-items:start;flex-direction:column}.section-head h2{font-size:36px}.listings{grid-template-columns:1fr}.photo{height:250px}.stats{margin:55px 0}.statgrid{grid-template-columns:1fr;gap:20px}.stat,.stat:first-child{border-left:1px solid #ffffff30;padding-left:18px}.stat strong{font-size:31px}.sell h2{font-size:40px}.formgrid{grid-template-columns:1fr}.formgrid .full{grid-column:auto}.foot{align-items:start;flex-direction:column}}
+
+/* AUREN Journal and newsletter */
+.journal{padding:20px 0 84px}
+.journal-intro{display:grid;grid-template-columns:1.1fr .9fr;gap:34px;align-items:end;margin-bottom:28px}
+.journal-intro h2{font:400 clamp(38px,5vw,58px)/1.03 var(--serif);letter-spacing:-1.7px;margin:12px 0}
+.journal-intro p{max-width:460px;color:var(--muted);font-size:14px;margin:0 0 5px}
+.journal-grid{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:16px}
+.journal-card{background:var(--white);border:1px solid var(--line);min-width:0}
+.journal-photo{height:190px;background-size:cover;background-position:center}
+.journal-card:first-child .journal-photo{height:240px}
+.journal-photo.realestate{background-image:url('https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1000&q=85')}
+.journal-photo.design{background-image:url('https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=900&q=85')}
+.journal-photo.art{background-image:url('https://images.unsplash.com/photo-1577083552431-6e5fd01aa342?auto=format&fit=crop&w=900&q=85')}
+.journal-card-body{padding:19px}
+.journal-kicker{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);font-weight:750}
+.journal-card h3{font:400 25px/1.12 var(--serif);margin:10px 0}
+.journal-card p{font-size:13px;color:var(--muted);margin:0 0 16px}
+.journal-link{font-size:12px;font-weight:700;border-bottom:1px solid var(--line);padding-bottom:5px}
+.newsletter{margin-top:28px;background:var(--ink);color:var(--paper);padding:clamp(25px,5vw,52px);display:grid;grid-template-columns:1fr .8fr;gap:36px;align-items:center}
+.newsletter .eyebrow{color:#C9A98F}.newsletter .eyebrow:before{background:#C9A98F}
+.newsletter h2{font:400 clamp(34px,4vw,49px)/1.05 var(--serif);letter-spacing:-1px;margin:12px 0}
+.newsletter p{color:#D8C9BB;font-size:14px;max-width:470px;margin:0}
+.newsletter-form{display:flex;gap:8px;align-items:stretch}
+.newsletter-form input{min-width:0;flex:1;height:48px;border:1px solid #8E7563;background:#FFFAF3;color:var(--ink);padding:0 13px;border-radius:2px}
+.newsletter-form button{white-space:nowrap;border:1px solid #C9A98F;background:#C9A98F;color:var(--ink);padding:0 17px;font-size:12px;font-weight:750;border-radius:2px}
+.newsletter-note{font-size:10px!important;color:#C9A98F!important;margin-top:10px!important}
+@media(max-width:760px){.journal-intro,.newsletter{grid-template-columns:1fr;gap:18px}.journal-grid{grid-template-columns:1fr 1fr}.journal-card:first-child{grid-column:1/-1}.journal-card:first-child .journal-photo{height:210px}}
+@media(max-width:520px){.journal-grid{grid-template-columns:1fr}.journal-card:first-child{grid-column:auto}.newsletter-form{flex-direction:column}.newsletter-form button{height:46px}}
+
 </style>
 </head>
 <body>
 <header><div class="wrap nav">
 <a class="brand" href="#top" aria-label="AUREN home"><span class="mark">A</span><span>AUREN</span></a>
-<nav class="navlinks"><a href="#properties">Properties</a><a href="#living">Living</a><a href="#studio">Studio</a></nav>
+<nav class="navlinks"><a href="#properties">Properties</a><a href="#living">Living</a><a href="#studio">Studio</a><a href="#journal">Journal</a></nav>
 <div class="navright"><select class="lang" id="language" aria-label="Language"><option value="it">IT</option><option value="en">EN</option></select><button class="btn" id="openListing" data-i18n="postBtn">Pubblica annuncio ↗</button></div>
 </div></header>
 <main id="top">
@@ -80,6 +109,23 @@ footer{background:#E9DCCF;padding:34px 0}.foot{display:flex;align-items:center;j
 <section class="wrap offer-grid reverse" id="studio-info"><div><div class="eyebrow">AUREN STUDIO</div><h2>Ogni spazio merita di essere raccontato.</h2><p>Servizi professionali per immobili, interni e brand: immagini, video, virtual tour, rendering, home staging e consulenze personalizzate. I servizi acquistabili online potranno essere scelti singolarmente.</p><a class="text-link" href="mailto:hello@auren.example?subject=AUREN%20Studio">Parliamo del tuo progetto ↗</a></div><div class="offer-image studio-image" role="img" aria-label="Campioni di materiali e progetto di interior design"></div></section>
 <section class="stats" id="how"><div class="wrap statgrid"><div class="stat"><strong>01</strong><span data-i18n="stat1">Un unico spazio, mercati globali</span></div><div class="stat"><strong>02</strong><span data-i18n="stat2">Annunci da privati e professionisti</span></div><div class="stat"><strong>03</strong><span data-i18n="stat3">La tua prossima casa, a modo tuo</span></div></div></section>
 <section class="wrap sell" id="sell"><div class="sell-art"><img src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1000&q=85" alt="Architettura contemporanea con giardino"></div><div><div class="eyebrow" data-i18n="yourProperty">LA TUA PROPRIETÀ, IL MONDO</div><h2 data-i18n="sellTitle">Ogni casa ha una storia.<br>La tua inizia qui.</h2><p data-i18n="sellText">Raggiungi persone che cercano una proprietà come la tua. Pubblica i dettagli e fatti trovare da una community internazionale.</p><ul class="sell-list"><li data-i18n="benefit1">Pubblicazione semplice e guidata</li><li data-i18n="benefit2">Visibilità per annunci privati e agenzie</li><li data-i18n="benefit3">Contatti diretti con gli interessati</li></ul><button class="btn" id="openListing2" data-i18n="startListing">Inizia a pubblicare ↗</button></div></section>
+
+<section class="wrap journal" id="journal">
+  <div class="journal-intro">
+    <div><div class="eyebrow">THE AUREN JOURNAL</div><h2>Spaces, objects,<br><em>stories.</em></h2></div>
+    <p>Uno sguardo curato sul mondo che ci circonda: luoghi da scoprire, idee di design, fotografia e arte. Una selezione per chi ama vivere gli spazi con intenzione.</p>
+  </div>
+  <div class="journal-grid">
+    <article class="journal-card"><div class="journal-photo realestate" role="img" aria-label="Architettura residenziale contemporanea"></div><div class="journal-card-body"><div class="journal-kicker">01 / Real Estate</div><h3>Le case raccontano più di quanto immaginiamo.</h3><p>Architettura, mercato immobiliare e dettagli che aiutano a riconoscere il potenziale di uno spazio.</p><a class="journal-link" href="mailto:hello@aurenliving.it?subject=AUREN%20Journal%20-%20Real%20Estate">Esplora il tema ↗</a></div></article>
+    <article class="journal-card"><div class="journal-photo design" role="img" aria-label="Interno contemporaneo con arredi di design"></div><div class="journal-card-body"><div class="journal-kicker">02 / Design & Living</div><h3>Il design è il modo in cui abitiamo.</h3><p>Materiali, oggetti, interni e nuove idee per dare carattere agli ambienti quotidiani.</p><a class="journal-link" href="mailto:hello@aurenliving.it?subject=AUREN%20Journal%20-%20Design">Scopri le idee ↗</a></div></article>
+    <article class="journal-card"><div class="journal-photo art" role="img" aria-label="Opera d'arte contemporanea in una galleria"></div><div class="journal-card-body"><div class="journal-kicker">03 / Photography & Art</div><h3>Guardare il mondo da un'altra prospettiva.</h3><p>Fotografia, artisti, mostre e progetti visivi tra cultura, architettura e creatività.</p><a class="journal-link" href="mailto:hello@aurenliving.it?subject=AUREN%20Journal%20-%20Art%20%26%20Photography">Lasciati ispirare ↗</a></div></article>
+  </div>
+  <div class="newsletter">
+    <div><div class="eyebrow">THE AUREN LETTER</div><h2>Good spaces.<br>Good ideas.</h2><p>Una lettera periodica con storie, ispirazioni e novità selezionate dal mondo dell'immobiliare, del design, della fotografia e dell'arte.</p></div>
+    <div><form class="newsletter-form" id="newsletterForm"><input id="newsletterEmail" type="email" placeholder="La tua email" aria-label="La tua email" autocomplete="email" required><button type="submit">ISCRIVIMI ↗</button></form><p class="newsletter-note">Iscrivendoti accetti di ricevere aggiornamenti AUREN. Potrai annullare l'iscrizione in qualsiasi momento. Il modulo è in versione dimostrativa e non salva ancora le email.</p></div>
+  </div>
+</section>
+
 </main>
 <footer><div class="wrap foot"><a class="brand" href="#top"><span class="mark">A</span><span>AUREN</span></a><small>© 2026 AUREN · Properties · Living · Studio. Concept demo: annunci e funzioni illustrative.</small><div class="footlinks"><a href="#properties">Properties</a><a href="#living">Living</a><a href="#studio">Studio</a><a href="mailto:hello@auren.example">Contatti</a></div></div></footer>
 <div class="modal-backdrop" id="listingModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal"><div class="modal-head"><div><div class="eyebrow" data-i18n="listProperty">PUBBLICA UNA PROPRIETÀ</div><h2 id="modalTitle" data-i18n="modalTitle">Metti la tua casa sulla mappa.</h2></div><button class="close" id="closeModal" aria-label="Chiudi">×</button></div>
@@ -117,6 +163,7 @@ function euro(n){return new Intl.NumberFormat(lang==="it"?"it-IT":"en-GB",{style
 function render(){const grid=document.getElementById("listingGrid");let filtered=listings.filter(x=>{let q=document.getElementById("location").value.trim().toLowerCase();let purpose=document.getElementById("purpose").value;let type=document.getElementById("type").value;let budget=document.getElementById("budget").value;return(!q||(x.location+" "+x.title).toLowerCase().includes(q))&&(purpose==="all"||x.purpose===purpose)&&(type==="all"||x.type===type)&&(budget==="any"||x.price<=Number(budget))&&(activeFilter==="all"||activeFilter===x.purpose||activeFilter===x.source)});document.getElementById("resultCount").textContent=tr("count")(filtered.length);grid.innerHTML="";if(!filtered.length){grid.innerHTML=`<div class="empty">${tr("noResults")}</div>`;return}filtered.forEach(x=>{const card=document.createElement("article");card.className="card";const img=x.image||"https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=900&q=80";const label=x.purpose==="sale"?tr("sale"):tr("rent");const price=x.purpose==="rent"?euro(x.price)+tr("perMonth"):euro(x.price);card.innerHTML=`<div class="photo"><img loading="lazy" src="${img}" alt="${escapeHTML(x.title)}" onerror="this.src='https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=900&q=80'"><span class="pill">${label}</span><button class="heart" aria-label="Preferito" title="Preferito">♡</button></div><div class="cardbody"><div class="location">${escapeHTML(x.location)}</div><h3>${escapeHTML(x.title)}</h3><div class="meta"><span>${x.area?x.area+" "+tr("sqm"):"—"}</span><span>${x.beds??"—"} ${tr("beds")}</span><span>${escapeHTML(x.type)}</span></div><div class="price-row"><span class="price">${price}</span><span class="source">${x.source==="private"?tr("private"):tr("agency")}</span></div></div>`;const heart=card.querySelector(".heart");heart.addEventListener("click",()=>{heart.classList.toggle("saved");heart.textContent=heart.classList.contains("saved")?"♥":"♡";showToast(heart.classList.contains("saved")?tr("saved"):tr("removeSaved"))});grid.appendChild(card)})}
 function escapeHTML(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function showToast(s){const t=document.getElementById("toast");t.textContent=s;t.style.display="block";clearTimeout(window.toastTimer);window.toastTimer=setTimeout(()=>t.style.display="none",3000)}
+document.getElementById("newsletterForm").addEventListener("submit",e=>{e.preventDefault();showToast("Grazie! Il modulo newsletter è dimostrativo: le iscrizioni non vengono ancora salvate.");});
 document.getElementById("searchForm").addEventListener("submit",e=>{e.preventDefault();render();document.getElementById("explore").scrollIntoView({behavior:"smooth"})});
 document.getElementById("quickFilters").addEventListener("click",e=>{const b=e.target.closest("button[data-filter]");if(!b)return;activeFilter=b.dataset.filter;document.querySelectorAll(".chip").forEach(x=>x.classList.toggle("active",x===b));render()});
 const modal=document.getElementById("listingModal");function openModal(){modal.classList.add("open");document.body.style.overflow="hidden"}function closeModal(){modal.classList.remove("open");document.body.style.overflow=""}
