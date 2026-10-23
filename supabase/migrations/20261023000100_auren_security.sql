@@ -16,6 +16,7 @@ drop policy if exists "Users can view own profile" on public.profiles;
 drop policy if exists "Users can update own profile" on public.profiles;
 drop policy if exists "Users can update own profile fields" on public.profiles;
 drop policy if exists "Public can view published properties" on public.properties;
+drop policy if exists "Owners can view own properties" on public.properties;
 drop policy if exists "Users can create own properties" on public.properties;
 drop policy if exists "Users can create pending own properties" on public.properties;
 drop policy if exists "Owners can update pending properties" on public.properties;
@@ -86,6 +87,10 @@ grant update (full_name) on public.profiles to authenticated;
 create policy "Public can view published properties"
 on public.properties for select to anon, authenticated
 using (status = 'published');
+
+create policy "Owners can view own properties"
+on public.properties for select to authenticated
+using ((select auth.uid()) = owner_id);
 
 create policy "Users can create pending own properties"
 on public.properties for insert to authenticated
