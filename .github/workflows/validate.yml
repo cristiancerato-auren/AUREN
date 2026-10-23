@@ -1,0 +1,27 @@
+name: Validate AUREN
+
+on:
+  push:
+    branches: ["feat/supabase-foundation", "main"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  static-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check inline JavaScript and migration safety invariants
+        run: node scripts/check-auren.mjs
