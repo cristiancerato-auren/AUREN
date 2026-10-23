@@ -125,5 +125,6 @@ create policy "Users can view own service requests"
 on public.service_requests for select to authenticated
 using ((select auth.uid()) = user_id);
 
-revoke select, update, delete on public.service_requests from anon, authenticated;
+revoke select, update, delete on public.service_requests from anon;
+revoke update, delete on public.service_requests from authenticated;
 grant insert on public.service_requests to anon, authenticated;
