@@ -17,6 +17,7 @@ drop policy if exists "Users can update own profile" on public.profiles;
 drop policy if exists "Users can update own profile fields" on public.profiles;
 drop policy if exists "Public can view published properties" on public.properties;
 drop policy if exists "Users can create own properties" on public.properties;
+drop policy if exists "Users can create pending own properties" on public.properties;
 drop policy if exists "Owners can update pending properties" on public.properties;
 drop policy if exists "Owners can update pending property details" on public.properties;
 drop policy if exists "Public can view active services" on public.services;
@@ -76,6 +77,10 @@ create policy "Users can update own profile fields"
 on public.profiles for update to authenticated
 using ((select auth.uid()) = id)
 with check ((select auth.uid()) = id);
+
+-- Limit profile edits to the display name; role/identity columns remain server-controlled.
+revoke update on public.profiles from authenticated;
+grant update (full_name) on public.profiles to authenticated;
 
 -- Listings: public can only read published listings.
 create policy "Public can view published properties"
