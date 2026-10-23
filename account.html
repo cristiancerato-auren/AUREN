@@ -41,8 +41,9 @@ $('loginTab').addEventListener('click',()=>setMode('login'));
 $('signupTab').addEventListener('click',()=>setMode('signup'));
 $('authForm').addEventListener('submit',async e=>{e.preventDefault();const btn=$('submitBtn');btn.disabled=true;message('Un momento…');try{const email=$('email').value.trim();const password=$('password').value;const result=mode==='login'?await client.auth.signInWithPassword({email,password}):await client.auth.signUp({email,password,options:{emailRedirectTo:window.location.origin+'/account.html'}});if(result.error)throw result.error;if(mode==='signup'&&!result.data.session){message('Registrazione avviata. Controlla la tua email per confermare l’indirizzo, poi accedi.')}else{message('Accesso effettuato. Account collegato correttamente.');await refresh()} }catch(err){message('Non è stato possibile completare l’operazione: '+(err.message||'errore imprevisto'))}finally{btn.disabled=false}});
 $('logoutBtn').addEventListener('click',async()=>{const {error}=await client.auth.signOut();if(error){message('Errore durante la disconnessione: '+error.message);return}message('Hai effettuato la disconnessione.');await refresh()});
-async function refresh(){const {data}=await client.auth.getSession();const logged=!!data.session;$('authForm').hidden=logged;$('logoutBtn').hidden=!logged;if(logged){$('heading').textContent='Account attivo';$('intro').textContent='Accesso effettuato come '+data.session.user.email+'.';$('loginTab').hidden=true;$('signupTab').hidden=true;}else{$('loginTab').hidden=false;$('signupTab').hidden=false;}}
-client.auth.onAuthStateChange(()=>{refresh()});refresh();
+function renderSession(session){const logged=!!session;$('authForm').hidden=logged;$('logoutBtn').hidden=!logged;if(logged){$('heading').textContent='Account attivo';$('intro').textContent='Accesso effettuato come '+session.user.email+'.';$('loginTab').hidden=true;$('signupTab').hidden=true;}else{$('loginTab').hidden=false;$('signupTab').hidden=false;}}
+client.auth.onAuthStateChange((_event,session)=>{renderSession(session)});
+client.auth.getSession().then(({data,error})=>{if(error)message('Impossibile verificare la sessione: '+error.message);else renderSession(data.session)}).catch(()=>message('Servizio account temporaneamente non disponibile. Riprova tra poco.'));
 })();
 </script>
 </body>
