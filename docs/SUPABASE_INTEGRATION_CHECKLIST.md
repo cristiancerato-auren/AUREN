@@ -25,7 +25,7 @@ The policies also assume listing status values `pending` and `published`. Do not
 - Register with a test email; confirm the email if required; sign in and sign out.
 - Confirm a user can read only their own profile and can update only `full_name`, not `account_type` or any future role/admin fields.
 - Confirm anonymous users can read only published properties and active services.
-- Confirm a signed-in user can create a pending listing only for their own `owner_id`, and cannot publish it by changing `status`.
+- Confirm a signed-in user can read their own pending listings, create a pending listing only for their own `owner_id`, and cannot publish it by changing `status`.
 - Confirm an anonymous visitor can submit a service request only with an email or phone, and cannot read, update, or delete service requests.
 - Repeat the migration in a disposable test project to verify it is rerunnable before considering a production application.
 
