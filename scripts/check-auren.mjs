@@ -37,7 +37,7 @@ const droppedPolicies = new Set([...sql.matchAll(/drop\s+policy\s+if\s+exists\s+
 const missingDrops = createdPolicies.filter((policy) => !droppedPolicies.has(policy));
 assert.deepEqual(missingDrops, [], "Every created policy must be dropped first so the migration can be rerun");
 for (const table of ["profiles", "properties", "services", "service_requests"]) {
-  assert.match(sql, new RegExp(`alter\s+table\s+public\.${table}\s+enable\s+row\s+level\s+security`, "i"),
+  assert.match(sql, new RegExp(String.raw`alter\s+table\s+public\.${table}\s+enable\s+row\s+level\s+security`, "i"),
     `RLS must be enabled for public.${table}`);
 }
 assert.match(sql, /revoke\s+update\s+on\s+public\.profiles\s+from\s+authenticated/i);
