@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#f4efe7">
+<title>Account | AUREN Living</title>
+<style>
+:root{--cream:#f4efe7;--paper:#fffdf9;--ink:#211b17;--brown:#76543d;--line:#ddd2c5;--muted:#746b63}
+*{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--ink);font-family:Arial,Helvetica,sans-serif;min-height:100vh;display:grid;place-items:center;padding:24px}
+main{width:min(100%,460px);background:var(--paper);border:1px solid var(--line);padding:clamp(24px,6vw,44px);box-shadow:0 18px 60px #3927180d}
+a{color:var(--brown)}.brand{font-family:Georgia,serif;font-size:34px;letter-spacing:.18em;text-align:center;margin:0}.sub{text-align:center;color:var(--muted);font-size:12px;letter-spacing:.2em;text-transform:uppercase;margin:9px 0 32px}h1{font-family:Georgia,serif;font-weight:400;font-size:28px;margin:0 0 8px}p{color:var(--muted);line-height:1.55;font-size:14px}.tabs{display:flex;border-bottom:1px solid var(--line);margin:24px 0}button{font:inherit;cursor:pointer}.tab{flex:1;border:0;background:transparent;padding:12px;color:var(--muted);border-bottom:2px solid transparent}.tab[aria-selected=true]{color:var(--brown);border-bottom-color:var(--brown)}label{display:block;font-size:12px;margin:17px 0 7px;color:var(--muted)}input{width:100%;padding:13px;border:1px solid var(--line);background:white;font:inherit;outline-color:var(--brown)}.primary{width:100%;margin-top:22px;padding:14px;border:1px solid var(--brown);background:var(--brown);color:white}.primary:disabled{opacity:.55;cursor:wait}.status{min-height:24px;font-size:13px;margin:15px 0 0;overflow-wrap:anywhere}.back{text-align:center;margin-top:24px;font-size:13px}.fine{font-size:11px;color:var(--muted);margin-top:20px}
+</style>
+</head>
+<body>
+<main>
+<p class="brand">AUREN</p><div class="sub">Living · Property · Studio</div>
+<h1 id="heading">Accedi al tuo account</h1><p id="intro">Gestisci i tuoi annunci e le tue richieste AUREN.</p>
+<div class="tabs" role="tablist"><button class="tab" id="loginTab" aria-selected="true" type="button">Accedi</button><button class="tab" id="signupTab" aria-selected="false" type="button">Crea account</button></div>
+<form id="authForm">
+<label for="email">Email</label><input id="email" name="email" type="email" autocomplete="email" required>
+<label for="password">Password</label><input id="password" name="password" type="password" minlength="8" autocomplete="current-password" required>
+<button class="primary" id="submitBtn" type="submit">Accedi</button>
+</form>
+<button id="logoutBtn" class="primary" type="button" hidden>Esci dall'account</button>
+<p class="status" id="status" role="status" aria-live="polite"></p>
+<p class="fine">La registrazione potrebbe richiedere la conferma dell'indirizzo email. Non usare questa pagina come unica misura di sicurezza: accessi e dati devono essere protetti anche dalle regole del database.</p>
+<div class="back"><a href="./">Torna alla homepage</a></div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){
+const SUPABASE_URL='https://upcgbbwwghaazsqfbwri.supabase.co';
+const SUPABASE_ANON_KEY='sb_publishable_SrxxuVdqu0TqBEhkfxIO1Q_Xdi834aQ';
+const $=id=>document.getElementById(id);
+let mode='login';
+const client=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+function message(t){$('status').textContent=t}
+function setMode(next){mode=next;const login=mode==='login';$('loginTab').setAttribute('aria-selected',String(login));$('signupTab').setAttribute('aria-selected',String(!login));$('heading').textContent=login?'Accedi al tuo account':'Crea il tuo account';$('intro').textContent=login?'Gestisci i tuoi annunci e le tue richieste AUREN.':'Registrati per iniziare a utilizzare i servizi AUREN.';$('submitBtn').textContent=login?'Accedi':'Crea account';$('password').autocomplete=login?'current-password':'new-password';message('')}
+$('loginTab').addEventListener('click',()=>setMode('login'));
+$('signupTab').addEventListener('click',()=>setMode('signup'));
+$('authForm').addEventListener('submit',async e=>{e.preventDefault();const btn=$('submitBtn');btn.disabled=true;message('Un momento…');try{const email=$('email').value.trim();const password=$('password').value;const result=mode==='login'?await client.auth.signInWithPassword({email,password}):await client.auth.signUp({email,password,options:{emailRedirectTo:window.location.origin+'/account.html'}});if(result.error)throw result.error;if(mode==='signup'&&!result.data.session){message('Registrazione avviata. Controlla la tua email per confermare l’indirizzo, poi accedi.')}else{message('Accesso effettuato. Account collegato correttamente.');await refresh()} }catch(err){message('Non è stato possibile completare l’operazione: '+(err.message||'errore imprevisto'))}finally{btn.disabled=false}});
+$('logoutBtn').addEventListener('click',async()=>{const {error}=await client.auth.signOut();if(error){message('Errore durante la disconnessione: '+error.message);return}message('Hai effettuato la disconnessione.');await refresh()});
+function renderSession(session){const logged=!!session;$('authForm').hidden=logged;$('logoutBtn').hidden=!logged;if(logged){$('heading').textContent='Account attivo';$('intro').textContent='Accesso effettuato come '+session.user.email+'.';$('loginTab').hidden=true;$('signupTab').hidden=true;}else{$('loginTab').hidden=false;$('signupTab').hidden=false;}}
+client.auth.onAuthStateChange((_event,session)=>{renderSession(session)});
+client.auth.getSession().then(({data,error})=>{if(error)message('Impossibile verificare la sessione: '+error.message);else renderSession(data.session)}).catch(()=>message('Servizio account temporaneamente non disponibile. Riprova tra poco.'));
+})();
+</script>
+</body>
+</html>
