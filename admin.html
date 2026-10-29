@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#f4efe7"><title>Admin | AUREN</title>
+<style>
+:root{--cream:#f4efe7;--paper:#fffdf9;--ink:#211b17;--brown:#76543d;--line:#ddd2c5;--muted:#746b63;--accent:#d9c2aa}
+*{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--ink);font:15px/1.5 Arial,sans-serif}header{background:var(--ink);color:white;padding:20px 4vw;display:flex;justify-content:space-between;align-items:center;gap:20px}header strong{font:28px Georgia,serif;letter-spacing:.16em}a{color:inherit}button,input,select{font:inherit}button{cursor:pointer;border:1px solid var(--brown);background:var(--brown);color:white;padding:9px 13px;border-radius:3px}button.secondary{background:transparent;color:var(--brown)}button.danger{background:#7b3027;border-color:#7b3027}button:disabled{opacity:.5}main{width:min(1200px,92vw);margin:36px auto}.muted{color:var(--muted)}.panel{background:var(--paper);border:1px solid var(--line);padding:22px;margin:20px 0}.panel h2{font:30px Georgia,serif;margin:0 0 8px}.status{min-height:24px;margin:12px 0;color:var(--brown)}.hidden{display:none!important}.item{border-top:1px solid var(--line);padding:16px 0;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;align-items:center}.item h3{margin:0 0 5px;font:22px Georgia,serif}.actions{display:flex;gap:8px;flex-wrap:wrap}.price-edit{width:130px;padding:8px;border:1px solid var(--line);margin-right:8px}.badge{display:inline-block;background:var(--accent);padding:3px 8px;font-size:11px;text-transform:uppercase;letter-spacing:.05em}@media(max-width:650px){.item{grid-template-columns:1fr}.actions{justify-content:flex-start}}
+</style>
+</head>
+<body>
+<header><strong>AUREN</strong><div><a href="./">Homepage</a> &nbsp; <button class="secondary" id="logout">Esci</button></div></header>
+<main>
+<h1 style="font:40px Georgia,serif;font-weight:400">Area amministrazione</h1>
+<p class="muted">Moderazione degli annunci, gestione delle richieste e listino servizi. Accesso riservato agli account autorizzati AUREN.</p>
+<p id="status" class="status" role="status">Verifica dell'accesso…</p>
+<section id="dashboard" class="hidden">
+<div class="panel"><h2>Annunci in attesa</h2><p class="muted">Approva un annuncio per renderlo visibile pubblicamente.</p><div id="properties"></div></div>
+<div class="panel"><h2>Richieste dei clienti</h2><p class="muted">Queste informazioni sono visibili solo agli amministratori.</p><div id="requests"></div></div>
+<div class="panel"><h2>Listino servizi</h2><p class="muted">Modifica il prezzo in euro e salva. I servizi possono essere attivati o disattivati.</p><div id="services"></div></div>
+</section>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(() => {
+const db=window.supabase.createClient('https://upcgbbwwghaazsqfbwri.supabase.co','sb_publishable_SrxxuVdqu0TqBEhkfxIO1Q_Xdi834aQ');
+const $=id=>document.getElementById(id);const status=t=>$('status').textContent=t;
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let user=null;
+$('logout').onclick=async()=>{await db.auth.signOut();location.href='account.html'};
+async function init(){
+ const {data,error}=await db.auth.getSession();if(error||!data.session){status('Accedi con un account AUREN autorizzato.');return}
+ user=data.session.user;
+ const {data:profile,error:pe}=await db.from('profiles').select('account_type').eq('id',user.id).maybeSingle();
+ if(pe||profile?.account_type!=='admin'){status('Accesso negato. Questo account non è abilitato come amministratore.');return}
+ $('dashboard').classList.remove('hidden');status('Accesso amministratore verificato.');
+ await Promise.all([loadProperties(),loadRequests(),loadServices()]);
+}
+async function loadProperties(){
+ const root=$('properties');const {data,error}=await db.from('properties').select('id,title,city,price,listing_type,status,created_at,owner_id').eq('status','pending').order('created_at',{ascending:false});
+ if(error){root.textContent='Impossibile caricare gli annunci.';console.error(error);return}
+ if(!data?.length){root.textContent='Nessun annuncio in attesa.';return}
+ root.innerHTML=data.map(p=>'<div class="item"><div><h3>'+esc(p.title)+'</h3><div>'+esc(p.city)+' · '+esc(p.listing_type)+' · €'+Number(p.price).toLocaleString('it-IT')+'</div><small class="muted">ID: '+esc(p.id)+'</small></div><div class="actions"><button data-publish="'+esc(p.id)+'">Approva</button><button class="danger" data-reject="'+esc(p.id)+'">Rifiuta</button></div></div>').join('');
+ root.querySelectorAll('[data-publish]').forEach(b=>b.onclick=()=>setProperty(b.dataset.publish,'published'));
+ root.querySelectorAll('[data-reject]').forEach(b=>b.onclick=()=>setProperty(b.dataset.reject,'rejected'));
+}
+async function setProperty(id,statusValue){
+ const {error}=await db.from('properties').update({status:statusValue}).eq('id',id);
+ if(error){status('Aggiornamento non riuscito: verifica le policy amministrative.');console.error(error);return}
+ status(statusValue==='published'?'Annuncio pubblicato.':'Annuncio rifiutato.');await loadProperties();
+}
+async function loadRequests(){
+ const root=$('requests');const {data,error}=await db.from('service_requests').select('id,contact_email,contact_phone,notes,status,created_at').order('created_at',{ascending:false}).limit(100);
+ if(error){root.textContent='Impossibile caricare le richieste.';console.error(error);return}
+ if(!data?.length){root.textContent='Nessuna richiesta ricevuta.';return}
+ root.innerHTML=data.map(r=>'<div class="item"><div><h3>'+esc((r.notes||'Richiesta cliente').split('\n').find(x=>x.startsWith('Servizio:'))||'Richiesta cliente')+'</h3><div>'+esc(r.contact_email||'')+' '+esc(r.contact_phone||'')+'</div><p>'+esc(r.notes||'')+'</p><span class="badge">'+esc(r.status)+'</span></div><div class="actions"><select aria-label="Stato richiesta" data-request="'+esc(r.id)+'"><option value="pending" '+(r.status==='pending'?'selected':'')+'>In attesa</option><option value="in_progress" '+(r.status==='in_progress'?'selected':'')+'>In lavorazione</option><option value="completed" '+(r.status==='completed'?'selected':'')+'>Completata</option><option value="cancelled" '+(r.status==='cancelled'?'selected':'')+'>Annullata</option></select><button data-save-request="'+esc(r.id)+'">Salva</button></div></div>').join('');
+ root.querySelectorAll('[data-save-request]').forEach(b=>b.onclick=async()=>{const id=b.dataset.saveRequest;const value=root.querySelector('[data-request="'+id+'"]').value;const {error}=await db.from('service_requests').update({status:value}).eq('id',id);if(error){status('Non è stato possibile aggiornare la richiesta.');console.error(error)}else{status('Stato richiesta aggiornato.');await loadRequests()}});
+}
+async function loadServices(){
+ const root=$('services');const {data,error}=await db.from('services').select('id,name,description,price,active').order('name');
+ if(error){root.textContent='Impossibile caricare il listino.';console.error(error);return}
+ if(!data?.length){root.textContent='Nessun servizio configurato.';return}
+ root.innerHTML=data.map(s=>'<div class="item"><div><h3>'+esc(s.name)+'</h3><div class="muted">'+esc(s.description||'')+'</div><label><input type="checkbox" data-active="'+esc(s.id)+'" '+(s.active?'checked':'')+'> Attivo</label></div><div><input class="price-edit" type="number" min="0" step="1" value="'+Number(s.price)+'" aria-label="Prezzo '+esc(s.name)+'" data-price="'+esc(s.id)+'"><button data-save-service="'+esc(s.id)+'">Salva</button></div></div>').join('');
+ root.querySelectorAll('[data-save-service]').forEach(b=>b.onclick=async()=>{const id=b.dataset.saveService;const price=Number(root.querySelector('[data-price="'+id+'"]').value);const active=root.querySelector('[data-active="'+id+'"]').checked;if(!Number.isFinite(price)||price<0){status('Inserisci un prezzo valido.');return}const {error}=await db.from('services').update({price,active}).eq('id',id);if(error){status('Modifica non riuscita: verifica le autorizzazioni admin.');console.error(error)}else status('Listino aggiornato.')});
+}
+init().catch(e=>{console.error(e);status('Errore durante la verifica dell’accesso.')});
+})();
+</script>
+</body></html>
