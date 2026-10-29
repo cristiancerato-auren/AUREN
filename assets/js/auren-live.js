@@ -87,7 +87,7 @@
       const { data: property, error } = await db.from('properties').insert({
         owner_id: session.user.id,
         title: $('newTitle').value.trim(),
-        description: '',
+        description: $('newDescription').value.trim(),
         property_type: $('newType').value,
         listing_type: $('newPurpose').value,
         price: Number($('newPrice').value),
