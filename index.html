@@ -216,7 +216,7 @@ footer{background:#E7D7C6}
 <div class="field"><label for="newType" data-i18n="kind">Tipo immobile *</label><select id="newType"><option>Appartamento</option><option>Villa</option><option>Casa</option><option>Loft</option></select></div>
 <div class="field"><label for="newArea" data-i18n="area">Superficie (m²)</label><input id="newArea" type="number" min="1" max="100000" step="1" placeholder="95"></div>
 <div class="field"><label for="newBeds" data-i18n="bedrooms">Camere da letto</label><input id="newBeds" type="number" min="0" max="100" step="1" placeholder="2"></div>
-<div class="field"><label for="newImage" data-i18n="imageUrl">URL immagine (facoltativo)</label><input id="newImage" type="url" placeholder="https://..."></div>
+<div class="field"><label for="newImage" data-i18n="imageUrl">URL immagine (facoltativo)</label><input id="newImage" type="url" placeholder="https://..."></div><div class="field"><label for="newFiles">Carica fotografie (JPG, PNG, WebP; max 5 MB ciascuna)</label><input id="newFiles" type="file" accept="image/jpeg,image/png,image/webp" multiple></div>
 <div class="field full"><label for="newEmail" data-i18n="contactEmail">Email di contatto *</label><input id="newEmail" required type="email" maxlength="254" autocomplete="email" placeholder="tu@email.com"></div>
 </div><p class="note" data-i18n="demoNote">Per pubblicare un annuncio devi accedere al tuo account AUREN. Ogni annuncio viene verificato prima della pubblicazione.</p><button class="btn" type="submit" data-i18n="submitListing">Invia per approvazione ↗</button></form></div></div>
 <div class="modal-backdrop contact-modal" id="serviceModal" role="dialog" aria-modal="true" aria-labelledby="serviceModalTitle"><div class="modal"><div class="modal-head"><div><div class="eyebrow">AUREN STUDIO</div><h2 id="serviceModalTitle">Completa la richiesta</h2></div><button class="close" id="closeServiceModal" aria-label="Chiudi">×</button></div>
@@ -262,5 +262,6 @@ document.getElementById('serviceForm').addEventListener('submit',e=>{e.preventDe
 render();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/js/auren-storage.js"></script>
 <script src="assets/js/auren-live.js"></script>
 </body></html>
