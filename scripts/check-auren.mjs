@@ -11,10 +11,10 @@ const files = {
 };
 
 function checkHtmlScripts(html, filename) {
-  const scripts = [...html.matchAll(/<script\\b([^>]*)>([\\s\\S]*?)<\\/script>/gi)];
+  const scripts = [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)];
   let count = 0;
   for (const [, attrs, source] of scripts) {
-    if (/\\bsrc\\s*=/.test(attrs) || !source.trim()) continue;
+    if (/\bsrc\s*=/.test(attrs) || !source.trim()) continue;
     new vm.Script(source, {filename: filename + ":inline-" + (++count)});
   }
   assert.ok(count, "No inline scripts checked for " + filename);
@@ -26,11 +26,11 @@ checkHtmlScripts(files.admin, "admin.html");
 new vm.Script(files.live, {filename:"assets/js/auren-live.js"});
 console.log("✓ Live Supabase integration JavaScript syntax");
 
-assert.match(files.index, /href=["']account\\.html["']/i);
-assert.match(files.index, /assets\\/js\\/auren-live\\.js/);
-assert.match(files.live, /from\\('properties'\\)/);
-assert.match(files.live, /from\\('service_requests'\\)/);
-assert.match(files.live, /from\\('newsletter_subscribers'\\)/);
+assert.match(files.index, /href=["']account\.html["']/i);
+assert.match(files.index, /assets\/js\/auren-live\.js/);
+assert.match(files.live, /from\('properties'\)/);
+assert.match(files.live, /from\('service_requests'\)/);
+assert.match(files.live, /from\('newsletter_subscribers'\)/);
 assert.match(files.account, /signInWithPassword/);
 assert.match(files.account, /signUp/);
 assert.match(files.admin, /account_type/);
