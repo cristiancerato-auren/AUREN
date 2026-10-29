@@ -168,5 +168,23 @@
     }
   }, true);
 
+  async function refreshServicePrices() {
+    const {data, error} = await db.from('services').select('name,price,active').eq('active', true);
+    if (error) { console.warn('AUREN service catalog:', error.message); return; }
+    const services = data || [];
+    document.querySelectorAll('.service-order').forEach(button => {
+      const name = button.dataset.service;
+      const service = services.find(item => item.name.toLowerCase() === String(name).toLowerCase());
+      if (!service) return;
+      button.dataset.price = String(service.price);
+      const article = button.closest('.service-card');
+      if (article) {
+        const priceEl = article.querySelector('.service-price');
+        if (priceEl) priceEl.innerHTML = '€ ' + Number(service.price).toLocaleString('it-IT') + ' <small>/ da</small>';
+      }
+    });
+  }
+
   refreshListings();
+  refreshServicePrices();
 })();
