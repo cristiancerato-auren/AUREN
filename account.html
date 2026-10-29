@@ -24,6 +24,7 @@ a{color:var(--brown)}.brand{font-family:Georgia,serif;font-size:34px;letter-spac
 </form>
 <button id="logoutBtn" class="primary" type="button" hidden>Esci dall'account</button>
 <p class="status" id="status" role="status" aria-live="polite"></p>
+<button id="resendBtn" class="primary" type="button" hidden>Invia di nuovo l’email di conferma</button>
 <p class="fine">La registrazione potrebbe richiedere la conferma dell'indirizzo email. Non usare questa pagina come unica misura di sicurezza: accessi e dati devono essere protetti anche dalle regole del database.</p>
 <div class="back"><a href="./">Homepage</a> · <a href="journal.html">Journal</a> · <a href="admin.html">Area amministrazione</a></div>
 </main>
@@ -35,11 +36,12 @@ const SUPABASE_ANON_KEY='sb_publishable_SrxxuVdqu0TqBEhkfxIO1Q_Xdi834aQ';
 const $=id=>document.getElementById(id);
 let mode='login';
 const client=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
-function message(t){$('status').textContent=t}
+function message(t){$('status').textContent=t;$('resendBtn').hidden=!/Email not confirmed/i.test(t)}
 function setMode(next){mode=next;const login=mode==='login';$('loginTab').setAttribute('aria-selected',String(login));$('signupTab').setAttribute('aria-selected',String(!login));$('heading').textContent=login?'Accedi al tuo account':'Crea il tuo account';$('intro').textContent=login?'Gestisci i tuoi annunci e le tue richieste AUREN.':'Registrati per iniziare a utilizzare i servizi AUREN.';$('submitBtn').textContent=login?'Accedi':'Crea account';$('password').autocomplete=login?'current-password':'new-password';message('')}
 $('loginTab').addEventListener('click',()=>setMode('login'));
 $('signupTab').addEventListener('click',()=>setMode('signup'));
 $('authForm').addEventListener('submit',async e=>{e.preventDefault();const btn=$('submitBtn');btn.disabled=true;message('Un momento…');try{const email=$('email').value.trim();const password=$('password').value;const result=mode==='login'?await client.auth.signInWithPassword({email,password}):await client.auth.signUp({email,password,options:{emailRedirectTo:'https://aurenliving.it/account.html'}});if(result.error)throw result.error;if(mode==='signup'&&!result.data.session){message('Registrazione avviata. Controlla la tua email per confermare l’indirizzo, poi accedi.')}else{message('Accesso effettuato. Account collegato correttamente.');await refresh()} }catch(err){message('Non è stato possibile completare l’operazione: '+(err.message||'errore imprevisto'))}finally{btn.disabled=false}});
+$('resendBtn').addEventListener('click',async()=>{const email=$('email').value.trim();if(!email){message('Inserisci prima la tua email.');return}const btn=$('resendBtn');btn.disabled=true;message('Invio email in corso…');try{const {error}=await client.auth.resend({type:'signup',email,options:{emailRedirectTo:'https://aurenliving.it/account.html'}});if(error)throw error;message('Email di conferma inviata di nuovo. Apri la nuova email e usa il link più recente.')}catch(err){message('Non riesco a inviare la mail: '+(err.message||'errore imprevisto'))}finally{btn.disabled=false}});
 $('logoutBtn').addEventListener('click',async()=>{const {error}=await client.auth.signOut();if(error){message('Errore durante la disconnessione: '+error.message);return}message('Hai effettuato la disconnessione.');await refresh()});
 function renderSession(session){const logged=!!session;$('authForm').hidden=logged;$('logoutBtn').hidden=!logged;if(logged){$('heading').textContent='Account attivo';$('intro').textContent='Accesso effettuato come '+session.user.email+'.';$('loginTab').hidden=true;$('signupTab').hidden=true;}else{$('loginTab').hidden=false;$('signupTab').hidden=false;}}
 client.auth.onAuthStateChange((_event,session)=>{renderSession(session)});
