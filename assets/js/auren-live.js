@@ -76,7 +76,15 @@
     const button = form.querySelector('button[type="submit"]');
     button.disabled = true;
     try {
-      const { error } = await db.from('properties').insert({
+      let imageUrl = $('newImage').value.trim() || null;
+      const files = $('newFiles')?.files;
+      let uploadedImages = [];
+      if (files && files.length) {
+        if (!window.AURENStorage) throw new Error('Il servizio fotografie non è disponibile.');
+        uploadedImages = await window.AURENStorage.uploadPropertyImages(db, files);
+        if (uploadedImages.length) imageUrl = uploadedImages[0].publicUrl;
+      }
+      const { data: property, error } = await db.from('properties').insert({
         owner_id: session.user.id,
         title: $('newTitle').value.trim(),
         description: '',
@@ -87,9 +95,19 @@
         surface_sqm: $('newArea').value ? Number($('newArea').value) : null,
         bedrooms: $('newBeds').value ? Number($('newBeds').value) : null,
         status: 'pending',
-        image_url: $('newImage').value.trim() || null
-      });
+        image_url: imageUrl
+      }).select('id').single();
       if (error) throw error;
+      if (property && uploadedImages.length) {
+        const galleryRows = uploadedImages.map(image => ({
+          property_id: property.id,
+          owner_id: session.user.id,
+          image_url: image.publicUrl,
+          storage_path: image.path
+        }));
+        const { error: galleryError } = await db.from('property_images').insert(galleryRows);
+        if (galleryError) console.warn('AUREN gallery metadata:', galleryError.message);
+      }
       form.reset();
       $('listingModal')?.classList.remove('open');
       document.body.style.overflow = '';
