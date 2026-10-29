@@ -139,9 +139,10 @@
       const action = $('selectedAction').value;
       const details = $('serviceDetails').value.trim();
       const name = $('serviceName').value.trim();
+      const { data: serviceRow } = await db.from('services').select('id').eq('name', service).maybeSingle();
       const { error } = await db.from('service_requests').insert({
         user_id: session?.user?.id || null,
-        service_id: null,
+        service_id: serviceRow?.id || null,
         contact_email: email || null,
         contact_phone: phone || null,
         notes: [
