@@ -84,7 +84,7 @@ create index if not exists living_product_variants_product_idx
 
 -- Preserve the exact selected variant on each order, even if the catalogue changes later.
 alter table public.living_order_items
-  add column if not exists variant_id uuid references public.living_product_variants(id) on delete set null,
+  add column if not exists variant_id uuid references public.living_product_variants(id) on delete restrict,
   add column if not exists variant_name text,
   add column if not exists variant_options jsonb not null default '{}'::jsonb
     check (jsonb_typeof(variant_options) = 'object');
