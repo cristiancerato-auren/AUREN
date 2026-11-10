@@ -96,6 +96,16 @@ const checkoutSource = read("../supabase/functions/create-living-checkout/index.
 assert.match(checkoutSource, /requiredAddressFields = \["line1", "postal_code", "city", "province", "country"\]/, "Checkout address validation must match the storefront payload");
 assert.match(checkoutSource, /raw\.length > 64_000/, "Checkout request body must be size-limited");
 assert.doesNotMatch(files.living, /from\(['"]living_orders['"]\)\.insert/i, "Client must not create unpaid orders");
+const adminLivingSource = read("../admin-living.html");
+const livingCheckoutSource = read("../living.html");
+const webhookSource = read("../supabase/functions/stripe-living-webhook/index.ts");
+assert.match(adminLivingSource, /from\('living_product_variants'\)/, "Admin must manage product variants");
+assert.match(livingCheckoutSource, /variant_id/, "Storefront must preserve the selected product variant in the cart");
+assert.match(checkoutSource, /const safeItems = items\.map\(\(item\) => \(\{[\s\S]*product_id:[\s\S]*variant_id:[\s\S]*quantity:/, "Checkout must accept only product identifiers, variant identifiers, and quantities from the browser");
+assert.match(checkoutSource, /item\.unit_price/, "Stripe prices must come from the trusted database reservation");
+assert.match(webhookSource, /verifyStripeSignature/, "Stripe webhook must verify the signature");
+assert.match(webhookSource, /Number\(session\.amount_total\).*pendingOrder\.total/, "Webhook must verify the paid amount against the stored order total");
+
 for (const [name, content] of Object.entries(files)) {
   assert.doesNotMatch(content, /service_role|SUPABASE_SECRET_KEY|sb_secret_/i, "Secret key detected in " + name);
 }
