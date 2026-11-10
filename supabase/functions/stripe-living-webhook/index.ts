@@ -33,7 +33,10 @@ Deno.serve(async (req) => {
     return new Response("Webhook not configured", { status: 503 });
   }
 
+  const contentLength = Number(req.headers.get("content-length") ?? "0");
+  if (contentLength > 256_000) return new Response("Payload too large", { status: 413 });
   const rawBody = await req.text();
+  if (rawBody.length > 256_000) return new Response("Payload too large", { status: 413 });
   const signature = req.headers.get("Stripe-Signature") ?? "";
   let valid = false;
   try {
@@ -50,9 +53,19 @@ Deno.serve(async (req) => {
     return new Response("Invalid payload", { status: 400 });
   }
 
+  const handledEvents = new Set([
+    "checkout.session.completed",
+    "checkout.session.async_payment_succeeded",
+    "checkout.session.expired",
+  ]);
+  if (!handledEvents.has(event.type)) return new Response("ignored", { status: 200 });
+
   const session = event.data?.object;
   const orderId = session?.metadata?.order_id;
-  if (!orderId || !session?.id) return new Response("Missing order reference", { status: 400 });
+  if (typeof orderId !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(orderId) ||
+      typeof session?.id !== "string" || !session.id.startsWith("cs_")) {
+    return new Response("Missing or invalid order reference", { status: 400 });
+  }
 
   const supabase = createClient(supabaseUrl, serviceKey, {
     auth: { persistSession: false, autoRefreshToken: false },
