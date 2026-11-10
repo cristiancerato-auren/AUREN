@@ -7,17 +7,78 @@
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "display_override": ["standalone", "minimal-ui"],
+  "display_override": [
+    "standalone",
+    "minimal-ui"
+  ],
   "orientation": "any",
   "background_color": "#F4EEE5",
   "theme_color": "#39251B",
-  "categories": ["lifestyle", "shopping", "business"],
+  "categories": [
+    "lifestyle",
+    "shopping",
+    "business"
+  ],
   "icons": [
     {
       "src": "/assets/icons/auren-app.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "AUREN Properties",
+      "short_name": "Properties",
+      "description": "Esplora gli immobili AUREN",
+      "url": "/index.html#explore",
+      "icons": [
+        {
+          "src": "/assets/icons/auren-app.svg",
+          "sizes": "any",
+          "type": "image/svg+xml"
+        }
+      ]
+    },
+    {
+      "name": "AUREN Living",
+      "short_name": "Living",
+      "description": "Scopri arredi e design",
+      "url": "/living.html",
+      "icons": [
+        {
+          "src": "/assets/icons/auren-app.svg",
+          "sizes": "any",
+          "type": "image/svg+xml"
+        }
+      ]
+    },
+    {
+      "name": "AUREN Studio",
+      "short_name": "Studio",
+      "description": "Richiedi servizi creativi",
+      "url": "/index.html#services",
+      "icons": [
+        {
+          "src": "/assets/icons/auren-app.svg",
+          "sizes": "any",
+          "type": "image/svg+xml"
+        }
+      ]
+    },
+    {
+      "name": "AUREN Journal",
+      "short_name": "Journal",
+      "description": "Leggi storie e ispirazioni",
+      "url": "/journal.html",
+      "icons": [
+        {
+          "src": "/assets/icons/auren-app.svg",
+          "sizes": "any",
+          "type": "image/svg+xml"
+        }
+      ]
     }
   ]
 }
