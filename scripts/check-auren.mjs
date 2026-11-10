@@ -79,7 +79,7 @@ assert.match(emailSource, /kind === "shipped" && order\.payment_status !== "paid
 assert.match(commerceMigration, /variant_id uuid references public\.living_product_variants\(id\) on delete restrict/, "Historical order variants must not be deleted and corrupt stock restoration");
 assert.match(commerceMigration, /set search_path = pg_catalog, public, pg_temp/, "Privileged SQL functions must pin a safe search path");
 assert.match(commerceMigration, /enforce_living_order_paid_before_shipment/, "Database must reject shipment of unpaid orders");
-assert.match(commerceMigration, /before update of fulfillment_status on public\\.living_orders/, "Shipment guard must be enforced by a database trigger");
+assert.match(commerceMigration, /before update of fulfillment_status on public\.living_orders/, "Shipment guard must be enforced by a database trigger");
 assert.match(webhookSource, /sendLivingOrderEmail\(supabase, orderId, "paid"\)/, "Paid webhook must send order confirmation");
 assert.match(webhookSource, /rawBody\.length > 256_000/, "Stripe webhook payload must be size-limited");
 assert.match(webhookSource, /handledEvents\.has\(event\.type\)/, "Unrelated Stripe events must be acknowledged without order metadata");
