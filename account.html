@@ -24,6 +24,12 @@ a{color:var(--brown)}.brand{font-family:Georgia,serif;font-size:34px;letter-spac
 </form>
 <button id="forgotBtn" class="primary" type="button" style="background:transparent;color:var(--brown);margin-top:10px">Password dimenticata?</button>
 <button id="logoutBtn" class="primary" type="button" hidden>Esci dall'account</button>
+<section id="ordersPanel" hidden style="margin-top:28px;border-top:1px solid var(--line);padding-top:22px">
+<h2 style="font:400 24px Georgia,serif">I miei ordini</h2>
+<p>Consulta gli acquisti effettuati con questo account AUREN.</p>
+<div id="ordersStatus" class="status" role="status" aria-live="polite">Caricamento ordini…</div>
+<div id="myOrders"></div>
+</section>
 <p class="status" id="status" role="status" aria-live="polite"></p>
 <button id="resendBtn" class="primary" type="button" hidden>Invia di nuovo l’email di conferma</button>
 <p class="fine">La registrazione potrebbe richiedere la conferma dell'indirizzo email. Non usare questa pagina come unica misura di sicurezza: accessi e dati devono essere protetti anche dalle regole del database.</p>
@@ -47,9 +53,31 @@ if(recovery){$('heading').textContent='Reimposta la password';$('intro').textCon
 $('authForm').addEventListener('submit',async e=>{e.preventDefault();const btn=$('submitBtn');btn.disabled=true;message('Un momento…');try{const email=$('email').value.trim();const password=$('password').value;if(recovery){const {error}=await client.auth.updateUser({password});if(error)throw error;recovery=false;history.replaceState({},document.title,'/account.html');$('password').value='';$('heading').textContent='Password aggiornata';$('intro').textContent='La nuova password è stata salvata. Ora puoi accedere al tuo account.';$('submitBtn').textContent='Accedi';$('forgotBtn').hidden=false;$('loginTab').hidden=false;$('signupTab').hidden=false;message('Password aggiornata correttamente. Puoi accedere con la nuova password.');return}const result=mode==='login'?await client.auth.signInWithPassword({email,password}):await client.auth.signUp({email,password,options:{emailRedirectTo:'https://aurenliving.it/account.html'}});if(result.error)throw result.error;if(mode==='signup'&&!result.data.session){message('Registrazione avviata. Controlla la tua email per confermare l’indirizzo, poi accedi.')}else{message('Accesso effettuato. Account collegato correttamente.')} }catch(err){const detail=err.message||'errore imprevisto';if(/Auth session missing/i.test(detail)){recovery=false;setMode('login');$('authForm').hidden=false;$('loginTab').hidden=false;$('signupTab').hidden=false;message('Per cambiare la password devi prima richiedere il link: premi “Password dimenticata?” e apri il link ricevuto via email.')}else{message('Non è stato possibile completare l’operazione: '+detail)}}finally{btn.disabled=false}});
 $('resendBtn').addEventListener('click',async()=>{const email=$('email').value.trim();if(!email){message('Inserisci prima la tua email.');return}const btn=$('resendBtn');btn.disabled=true;message('Invio email in corso…');try{const {error}=await client.auth.resend({type:'signup',email,options:{emailRedirectTo:'https://aurenliving.it/account.html'}});if(error)throw error;message('Email di conferma inviata di nuovo. Apri la nuova email e usa il link più recente.')}catch(err){message('Non riesco a inviare la mail: '+(err.message||'errore imprevisto'))}finally{btn.disabled=false}});
 $('logoutBtn').addEventListener('click',async()=>{const {error}=await client.auth.signOut();if(error){message('Errore durante la disconnessione: '+error.message);return}message('Hai effettuato la disconnessione.');});
-function renderSession(session){const logged=!!session&&!recovery;$('authForm').hidden=logged;$('logoutBtn').hidden=!logged;if(logged){$('heading').textContent='Account attivo';$('intro').textContent='Accesso effettuato come '+session.user.email+'.';$('loginTab').hidden=true;$('signupTab').hidden=true;}else{$('loginTab').hidden=false;$('signupTab').hidden=false;}}
+
+function escapeHtml(value){return String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));}
+async function loadMyOrders(){
+ const panel=$('ordersPanel'),root=$('myOrders'),state=$('ordersStatus');panel.hidden=false;state.textContent='Caricamento ordini…';root.replaceChildren();
+ try{
+  const {data:orders,error}=await client.from('living_orders').select('id,order_number,total,currency,payment_status,fulfillment_status,tracking_code,tracking_url,created_at').order('created_at',{ascending:false}).limit(50);
+  if(error)throw error;
+  if(!orders?.length){state.textContent='Non risultano ordini associati a questo account.';return}
+  const ids=orders.map(o=>o.id);
+  const {data:items,error:itemError}=await client.from('living_order_items').select('order_id,product_name,quantity,unit_price,line_total,variant_name').in('order_id',ids);
+  if(itemError)throw itemError;
+  const grouped={};(items||[]).forEach(item=>(grouped[item.order_id]??=[]).push(item));
+  state.textContent=orders.length+' ordini';
+  root.innerHTML=orders.map(order=>{
+   const date=new Date(order.created_at).toLocaleDateString('it-IT');
+   const lines=(grouped[order.id]||[]).map(item=>'<li>'+escapeHtml(item.product_name)+(item.variant_name?' — '+escapeHtml(item.variant_name):'')+' × '+item.quantity+' · € '+Number(item.line_total).toLocaleString('it-IT',{minimumFractionDigits:2})+'</li>').join('');
+   const tracking=order.tracking_url&&order.tracking_url.startsWith('https://')?'<a href="'+escapeHtml(order.tracking_url)+'" target="_blank" rel="noopener noreferrer">Segui spedizione</a>':'';
+   return '<article style="border:1px solid var(--line);padding:15px;margin:12px 0;background:var(--paper)"><strong>Ordine #'+order.order_number+'</strong> · '+date+'<p>Totale: € '+Number(order.total).toLocaleString('it-IT',{minimumFractionDigits:2})+' · Pagamento: '+escapeHtml(order.payment_status)+' · Stato: '+escapeHtml(order.fulfillment_status)+'</p><ul>'+lines+'</ul>'+(order.tracking_code?'<p>Tracking: '+escapeHtml(order.tracking_code)+' '+tracking+'</p>':'')+'</article>';
+  }).join('');
+ }catch(error){console.error(error);state.textContent='Non riesco a caricare gli ordini. Riprova più tardi.'}
+}
+function renderSession(session){const logged=!!session&&!recovery;$('authForm').hidden=logged;$('logoutBtn').hidden=!logged;$('ordersPanel').hidden=!logged;if(logged){$('heading').textContent='Account attivo';$('intro').textContent='Accesso effettuato come '+session.user.email+'.';$('loginTab').hidden=true;$('signupTab').hidden=true;loadMyOrders();}else{$('loginTab').hidden=false;$('signupTab').hidden=false;$('myOrders').replaceChildren();}}
 client.auth.onAuthStateChange((_event,session)=>{renderSession(session)});
 client.auth.getSession().then(({data,error})=>{if(error)message('Impossibile verificare la sessione: '+error.message);else renderSession(data.session)}).catch(()=>message('Servizio account temporaneamente non disponibile. Riprova tra poco.'));
+
 })();
 </script>
 </body>
