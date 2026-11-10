@@ -26,6 +26,10 @@ a{color:var(--brown)}.brand{font-family:Georgia,serif;font-size:34px;letter-spac
 }
 @media(min-width:761px){.auren-app-nav{display:none!important}}
 </style>
+
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/assets/icons/auren-app.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/assets/icons/auren-app.svg">
 </head>
 <body>
 <main>
@@ -120,6 +124,15 @@ client.auth.getSession().then(({data,error})=>{if(error)message('Impossibile ver
   link.addEventListener("click",()=>{document.querySelectorAll(".auren-app-nav a").forEach(a=>a.removeAttribute("aria-current"));link.setAttribute("aria-current","page")});
  });
 })();
+</script>
+
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/service-worker.js", { scope: "/" })
+      .catch((error) => console.warn("AUREN offline support unavailable:", error));
+  });
+}
 </script>
 </body>
 </html>
