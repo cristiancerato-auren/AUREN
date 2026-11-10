@@ -3,7 +3,7 @@ import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
 type EmailKind = "paid" | "shipped";
 const escapeHtml = (value: unknown) => String(value ?? "").replace(/[&<>"']/g, (c) => ({
   "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
-}[c]));
+}[c] ?? c));
 
 export async function sendLivingOrderEmail(
   supabase: SupabaseClient,
