@@ -92,7 +92,8 @@
   ev.preventDefault();
   const price=Number(val('price')),compare=val('comparePrice')===''?null:Number(val('comparePrice')),stock=Number(val('stock'));
   if(!Number.isFinite(price)||price<0||!Number.isInteger(stock)||stock<0||(compare!==null&&(!Number.isFinite(compare)||compare<price))){status('Controlla prezzo, prezzo precedente e quantità.');return}
-  const payload={name:val('name'),sku:val('sku')||null,slug:val('slug').toLowerCase(),brand_type:val('brandType'),brand_name:val('brandName')||null,category:val('category')||null,description:val('description')||null,price,compare_at_price:compare,stock_quantity:stock,images:val('images').split('\n').map(x=>x.trim()).filter(Boolean),active:$('active').checked,featured:$('featured').checked,updated_at:new Date().toISOString()};
+  let images;try{images=safeImageUrls(val('images'))}catch(error){status(error.message||'URL immagine non valido.');return}
+  const payload={name:val('name'),sku:val('sku')||null,slug:val('slug').toLowerCase(),brand_type:val('brandType'),brand_name:val('brandName')||null,category:val('category')||null,description:val('description')||null,price,compare_at_price:compare,stock_quantity:stock,images,active:$('active').checked,featured:$('featured').checked,updated_at:new Date().toISOString()};
   const id=val('productId');const q=id?db.from('living_products').update(payload).eq('id',id):db.from('living_products').insert(payload);
   const {error}=await q;if(error){status('Salvataggio non riuscito. Controlla i campi e che slug e SKU siano univoci.');console.error(error)}else{status('Prodotto salvato.');resetForm();loadProducts()}
  };
