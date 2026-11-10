@@ -16,6 +16,15 @@ const json = (body: unknown, status = 200) =>
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "Metodo non consentito" }, 405);
+  const requestOrigin = req.headers.get("Origin");
+  const allowedOrigin = Deno.env.get("SITE_URL") ?? "https://aurenliving.it";
+  try {
+    if (requestOrigin && new URL(requestOrigin).origin !== new URL(allowedOrigin).origin) {
+      return json({ error: "Origine non autorizzata" }, 403);
+    }
+  } catch {
+    return json({ error: "Origine non valida" }, 403);
+  }
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
