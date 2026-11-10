@@ -136,19 +136,24 @@ Deno.serve(async (req) => {
   });
 
   const session = await stripeResponse.json();
-  if (!stripeResponse.ok || typeof session.url !== "string" || typeof session.id !== "string") {
+  let checkoutUrl: URL | null = null;
+  try {
+    checkoutUrl = typeof session.url === "string" ? new URL(session.url) : null;
+  } catch { /* Invalid provider URL is rejected below. */ }
+  if (!stripeResponse.ok || !checkoutUrl || checkoutUrl.protocol !== "https:" ||
+      checkoutUrl.hostname !== "checkout.stripe.com" || typeof session.id !== "string") {
     console.error("Stripe session creation failed", session);
     await supabase.rpc("release_living_order_reservation", { p_order_id: reservation.order_id });
     return json({ error: "Impossibile avviare il pagamento. Riprova." }, 502);
   }
 
-  const { error: updateError } = await supabase.from("living_orders").update({
+  const { data: linkedOrder, error: updateError } = await supabase.from("living_orders").update({
     payment_provider: "stripe",
     provider_session_id: session.id,
     updated_at: new Date().toISOString(),
-  }).eq("id", reservation.order_id).eq("payment_status", "pending");
+  }).eq("id", reservation.order_id).eq("payment_status", "pending").select("id").maybeSingle();
 
-  if (updateError) {
+  if (updateError || !linkedOrder) {
     await fetch("https://api.stripe.com/v1/checkout/sessions/" + encodeURIComponent(session.id) + "/expire", {
       method: "POST",
       headers: { "Authorization": "Bearer " + stripeKey },
@@ -157,5 +162,5 @@ Deno.serve(async (req) => {
     return json({ error: "Errore durante la preparazione dell'ordine" }, 502);
   }
 
-  return json({ checkout_url: session.url, order_number: reservation.order_number });
+  return json({ checkout_url: checkoutUrl.href, order_number: reservation.order_number });
 });
