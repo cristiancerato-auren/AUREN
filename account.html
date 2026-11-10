@@ -49,6 +49,17 @@ a{color:var(--brown)}.brand{font-family:Georgia,serif;font-size:34px;letter-spac
 <div id="favoritesStatus" class="status" role="status" aria-live="polite"></div>
 <div id="myFavorites"></div>
 </section>
+<section id="profilePanel" hidden style="margin-top:28px;border-top:1px solid var(--line);padding-top:22px">
+<h2 style="font:400 24px Georgia,serif">I tuoi dati</h2>
+<p>Modifica i recapiti associati al tuo account AUREN.</p>
+<form id="profileForm">
+<label for="profileName">Nome e cognome</label><input id="profileName" name="full_name" type="text" maxlength="120" autocomplete="name">
+<label for="profilePhone">Telefono</label><input id="profilePhone" name="phone" type="tel" maxlength="30" autocomplete="tel">
+<p id="profileRole" class="fine"></p>
+<button class="primary" id="saveProfileBtn" type="submit">Salva i dati</button>
+</form>
+<div id="profileStatus" class="status" role="status" aria-live="polite"></div>
+</section>
 <section id="ordersPanel" hidden style="margin-top:28px;border-top:1px solid var(--line);padding-top:22px">
 <h2 style="font:400 24px Georgia,serif">I miei ordini</h2>
 <p>Consulta gli acquisti effettuati con questo account AUREN.</p>
@@ -119,6 +130,34 @@ async function syncCloudFavorites(session){
   if(state)state.textContent=merged.size+" immobili salvati · sincronizzati con il tuo account.";
  }catch(error){favoriteSyncUser=null;console.warn("AUREN cloud favourites:",error.message);if(state)state.textContent="Preferiti salvati su questo dispositivo. Sincronizzazione account non ancora disponibile."}
 }
+async function loadProfile(session){
+ const state=$("profileStatus"),form=$("profileForm"),button=$("saveProfileBtn");
+ if(!session?.user?.id||!form)return;
+ state.textContent="Caricamento dati…";button.disabled=true;
+ try{
+  const {data,error}=await client.from("profiles").select("full_name,phone,account_type").eq("id",session.user.id).maybeSingle();
+  if(error)throw error;
+  if(!data){state.textContent="Profilo non ancora disponibile. I dati di accesso restano attivi.";return;}
+  $("profileName").value=data.full_name||"";
+  $("profilePhone").value=data.phone||"";
+  const roles={private:"Account privato",agency:"Agenzia",admin:"Amministratore"};
+  $("profileRole").textContent=roles[data.account_type]||"Account AUREN";
+  state.textContent="Dati caricati.";
+ }catch(error){console.warn("AUREN profile:",error.message);state.textContent="Non riesco a caricare i dati del profilo."}
+ finally{button.disabled=false}
+}
+$("profileForm").addEventListener("submit",async event=>{
+ event.preventDefault();if(!activeSession?.user?.id)return;
+ const button=$("saveProfileBtn"),state=$("profileStatus");button.disabled=true;state.textContent="Salvataggio…";
+ try{
+  const payload={full_name:$("profileName").value.trim()||null,phone:$("profilePhone").value.trim()||null};
+  const {data,error}=await client.from("profiles").update(payload).eq("id",activeSession.user.id).select("id").maybeSingle();
+  if(error)throw error;
+  if(!data)throw new Error("Profilo non trovato o non aggiornabile.");
+  state.textContent="Dati del profilo aggiornati.";
+ }catch(error){console.warn("AUREN profile update:",error.message);state.textContent="Salvataggio non riuscito. Controlla i dati e riprova."}
+ finally{button.disabled=false}
+});
 function renderFavorites(){
  const root=$("myFavorites"),state=$("favoritesStatus");if(!root||!state)return;
  const items=readFavorites();root.replaceChildren();
@@ -135,7 +174,7 @@ function renderFavorites(){
  });
 }
 window.addEventListener("storage",event=>{if(event.key===FAVORITES_KEY)renderFavorites()});
-function renderSession(session){activeSession=session||null;const logged=!!session&&!recovery;$('authForm').hidden=logged;$('logoutBtn').hidden=!logged;$('ordersPanel').hidden=!logged;if(logged){$('heading').textContent='Account attivo';$('intro').textContent='Accesso effettuato come '+session.user.email+'.';$('loginTab').hidden=true;$('signupTab').hidden=true;loadMyOrders();syncCloudFavorites(session);}else{favoriteSyncUser=null;$('loginTab').hidden=false;$('signupTab').hidden=false;$('myOrders').replaceChildren();}}
+function renderSession(session){activeSession=session||null;const logged=!!session&&!recovery;$('authForm').hidden=logged;$('logoutBtn').hidden=!logged;$('ordersPanel').hidden=!logged;if(logged){$('heading').textContent='Account attivo';$('intro').textContent='Accesso effettuato come '+session.user.email+'.';$('loginTab').hidden=true;$('signupTab').hidden=true;$('profilePanel').hidden=false;loadProfile(session);loadMyOrders();syncCloudFavorites(session);}else{$('profilePanel').hidden=true;favoriteSyncUser=null;$('loginTab').hidden=false;$('signupTab').hidden=false;$('myOrders').replaceChildren();}}
 client.auth.onAuthStateChange((_event,session)=>{renderSession(session)});
 renderFavorites();
 client.auth.getSession().then(({data,error})=>{if(error)message('Impossibile verificare la sessione: '+error.message);else renderSession(data.session)}).catch(()=>message('Servizio account temporaneamente non disponibile. Riprova tra poco.'));
