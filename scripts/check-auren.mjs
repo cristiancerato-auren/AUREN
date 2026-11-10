@@ -60,6 +60,7 @@ assert.match(files.adminLiving, /living_order_items/, "Admin must load order lin
 assert.match(files.adminLiving, /shipping_address/, "Admin must show shipping details");
 assert.match(files.adminLiving, /customer_note/, "Admin must show delivery notes");
 assert.match(files.adminLiving, /tracking_url/, "Admin must support shipment tracking links");
+assert.match(files.adminLiving, /fulfillment_status==='shipped'&&order\?\.payment_status!=='paid'/, "Admin must block shipment of unpaid orders");
 assert.match(files.adminLiving, /images=safeImageUrls\(val\('images'\)\)/, "Admin must validate product image URLs before saving");
 const commerceMigration = read("../supabase/migrations/20261110000100_auren_living_commerce.sql");
 assert.match(commerceMigration, /p_items is null/, "Reservation SQL must reject a null cart");
