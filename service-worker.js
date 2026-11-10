@@ -2,6 +2,11 @@ const CACHE_NAME = "auren-shell-v1";
 const OFFLINE_URL = "/offline.html";
 const APP_ASSETS = [
   OFFLINE_URL,
+  "/index.html",
+  "/living.html",
+  "/studio.html",
+  "/journal.html",
+  "/account.html",
   "/manifest.webmanifest",
   "/assets/icons/auren-app.svg"
 ];
