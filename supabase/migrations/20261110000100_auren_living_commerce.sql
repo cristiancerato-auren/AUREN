@@ -158,3 +158,139 @@ with check (exists (select 1 from public.profiles p where p.id = auth.uid() and 
 
 -- No client-side INSERT policy on orders/items: checkout must be created server-side
 -- after recalculating prices and stock, and payment confirmation must use a verified webhook.
+
+
+-- Checkout reservations are created only by the trusted server-side function.
+alter table public.living_orders
+  add column if not exists reservation_expires_at timestamptz;
+
+create or replace function public.create_living_order_reservation(
+  p_customer_name text,
+  p_customer_email text,
+  p_phone text,
+  p_shipping_address jsonb,
+  p_billing_address jsonb,
+  p_customer_note text,
+  p_user_id uuid,
+  p_items jsonb
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  item jsonb;
+  v_product public.living_products%rowtype;
+  v_variant public.living_product_variants%rowtype;
+  v_product_id uuid;
+  v_variant_id uuid;
+  v_quantity integer;
+  v_unit_price numeric(12,2);
+  v_variant_name text;
+  v_variant_options jsonb;
+  v_subtotal numeric(12,2) := 0;
+  v_order_id uuid;
+  v_order_number bigint;
+  v_items jsonb := '[]'::jsonb;
+begin
+  if coalesce(length(trim(p_customer_name)),0) = 0
+     or coalesce(length(trim(p_customer_email)),0) = 0
+     or p_shipping_address is null
+     or jsonb_typeof(p_shipping_address) <> 'object'
+     or jsonb_typeof(p_items) <> 'array'
+     or jsonb_array_length(p_items) = 0
+     or jsonb_array_length(p_items) > 50 then
+    raise exception 'Dati ordine non validi';
+  end if;
+
+  -- Stable lock order avoids deadlocks when carts contain multiple products.
+  for item in
+    select value
+    from jsonb_array_elements(p_items)
+    order by value->>'product_id', coalesce(value->>'variant_id','')
+  loop
+    v_product_id := (item->>'product_id')::uuid;
+    v_variant_id := nullif(item->>'variant_id','')::uuid;
+    v_quantity := (item->>'quantity')::integer;
+    if v_quantity is null or v_quantity < 1 or v_quantity > 25 then
+      raise exception 'Quantità non valida';
+    end if;
+
+    select * into v_product
+    from public.living_products
+    where id = v_product_id and active = true
+    for update;
+    if not found then raise exception 'Prodotto non disponibile'; end if;
+
+    v_variant_name := null;
+    v_variant_options := '{}'::jsonb;
+    if v_variant_id is not null then
+      select * into v_variant
+      from public.living_product_variants
+      where id = v_variant_id and product_id = v_product_id and active = true
+      for update;
+      if not found then raise exception 'Variante non disponibile'; end if;
+      if v_variant.stock_quantity < v_quantity then raise exception 'Disponibilità variante insufficiente'; end if;
+      v_unit_price := coalesce(v_variant.price_override, v_product.price);
+      v_variant_name := v_variant.name;
+      v_variant_options := v_variant.option_values;
+      update public.living_product_variants
+      set stock_quantity = stock_quantity - v_quantity, updated_at = now()
+      where id = v_variant_id;
+    else
+      if exists (select 1 from public.living_product_variants where product_id = v_product_id and active = true) then
+        raise exception 'Selezionare una variante';
+      end if;
+      if v_product.stock_quantity < v_quantity then raise exception 'Disponibilità prodotto insufficiente'; end if;
+      v_unit_price := v_product.price;
+      update public.living_products
+      set stock_quantity = stock_quantity - v_quantity, updated_at = now()
+      where id = v_product_id;
+    end if;
+
+    v_subtotal := v_subtotal + (v_unit_price * v_quantity);
+    v_items := v_items || jsonb_build_array(jsonb_build_object(
+      'product_id',v_product_id,'variant_id',v_variant_id,
+      'product_name',v_product.name,'sku',coalesce(v_variant.sku,v_product.sku),
+      'brand_type',v_product.brand_type,'quantity',v_quantity,
+      'unit_price',v_unit_price,'line_total',v_unit_price*v_quantity,
+      'variant_name',v_variant_name,'variant_options',v_variant_options
+    ));
+  end loop;
+
+  insert into public.living_orders(
+    user_id,customer_name,customer_email,phone,shipping_address,billing_address,
+    subtotal,shipping_total,total,currency,payment_status,fulfillment_status,
+    reservation_expires_at,customer_note
+  ) values (
+    p_user_id,trim(p_customer_name),trim(p_customer_email),nullif(trim(coalesce(p_phone,'')),''),
+    p_shipping_address,p_billing_address,v_subtotal,0,v_subtotal,'EUR','pending','unfulfilled',
+    now() + interval '30 minutes',nullif(trim(coalesce(p_customer_note,'')),'')
+  ) returning id,order_number into v_order_id,v_order_number;
+
+  insert into public.living_order_items(
+    order_id,product_id,variant_id,product_name,sku,brand_type,quantity,
+    unit_price,line_total,variant_name,variant_options
+  )
+  select v_order_id,
+    (x->>'product_id')::uuid,
+    nullif(x->>'variant_id','')::uuid,
+    x->>'product_name',x->>'sku',x->>'brand_type',
+    (x->>'quantity')::integer,(x->>'unit_price')::numeric,
+    (x->>'line_total')::numeric,x->>'variant_name',
+    coalesce(x->'variant_options','{}'::jsonb)
+  from jsonb_array_elements(v_items) as x;
+
+  return jsonb_build_object(
+    'order_id',v_order_id,'order_number',v_order_number,
+    'subtotal',v_subtotal,'total',v_subtotal,'currency','EUR',
+    'reservation_expires_at',now() + interval '30 minutes'
+  );
+end;
+$$;
+
+revoke all on function public.create_living_order_reservation(text,text,text,jsonb,jsonb,text,uuid,jsonb)
+  from public, anon, authenticated;
+grant execute on function public.create_living_order_reservation(text,text,text,jsonb,jsonb,text,uuid,jsonb)
+  to service_role;
