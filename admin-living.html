@@ -36,6 +36,25 @@
 </form>
 </div>
 <div class="panel"><h2>Catalogo prodotti</h2><div id="products"></div></div>
+<div class="panel">
+<h2>Varianti prodotto</h2>
+<p class="muted">Gestisci taglie, colori, finiture e materiali. Lascia il prezzo vuoto per usare quello del prodotto.</p>
+<div class="grid">
+<label class="field wide">Prodotto<select id="variantProduct"><option value="">Seleziona un prodotto</option></select></label>
+<form id="variantForm" class="grid wide">
+<input type="hidden" id="variantId">
+<label class="field">Nome variante<input id="variantName" required maxlength="120" placeholder="Es. Rovere naturale / Taglia M"></label>
+<label class="field">SKU variante<input id="variantSku" maxlength="80"></label>
+<label class="field">Prezzo specifico (€)<input id="variantPrice" type="number" min="0" step="0.01" placeholder="Prezzo del prodotto"></label>
+<label class="field">Disponibilità<input id="variantStock" type="number" min="0" step="1" value="0" required></label>
+<label class="field wide">Opzioni (JSON)<textarea id="variantOptions" placeholder='{"colore":"Rovere","misura":"M"}'>{}</textarea></label>
+<label class="field wide">URL immagine variante<input id="variantImage" type="url" placeholder="https://..."></label>
+<label><input id="variantActive" type="checkbox" checked> Variante attiva</label>
+<div class="wide actions"><button type="submit">Salva variante</button><button type="button" class="secondary" id="variantReset">Annulla</button></div>
+</form>
+</div>
+<div id="variants" class="muted">Seleziona un prodotto per visualizzarne le varianti.</div>
+</div>
 <div class="panel"><h2>Ordini ricevuti</h2><p class="muted">Gli ordini e i pagamenti saranno creati dal checkout server-side. Qui potrai gestire evasione e tracciamento.</p><div id="orders"></div></div>
 </section>
 </main>
@@ -61,9 +80,11 @@
  async function loadProducts(){
   const root=$('products');const {data,error}=await db.from('living_products').select('*').order('created_at',{ascending:false});
   if(error){root.textContent='Catalogo non ancora disponibile: prima applicare la migrazione commerce su Supabase.';console.error(error);return}
+  const selector=$('variantProduct');const selected=selector.value;selector.innerHTML='<option value="">Seleziona un prodotto</option>'+data.map(p=>'<option value="'+p.id+'">'+esc(p.name)+'</option>').join('');if(data.some(p=>p.id===selected))selector.value=selected;
   if(!data?.length){root.textContent='Nessun prodotto inserito.';return}
   root.innerHTML=data.map(p=>'<div class="item"><div><h3>'+esc(p.name)+'</h3><div><span class="tag">'+(p.brand_type==='auren'?'Linea AUREN':'Brand esterno')+'</span> '+esc(p.brand_name||'')+' · € '+Number(p.price).toLocaleString('it-IT',{minimumFractionDigits:2})+' · Stock: '+p.stock_quantity+'</div><small class="muted">'+(p.active?'Pubblicato':'Bozza / non visibile')+' · '+esc(p.sku||'')+'</small></div><div class="actions"><button data-edit="'+p.id+'">Modifica</button><button class="secondary" data-toggle="'+p.id+'" data-active="'+p.active+'">'+(p.active?'Nascondi':'Pubblica')+'</button></div></div>').join('');
   root.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>edit(data.find(p=>p.id===b.dataset.edit)));
+  if(selector.value)await loadVariants();
   root.querySelectorAll('[data-toggle]').forEach(b=>b.onclick=async()=>{const {error}=await db.from('living_products').update({active:b.dataset.active!=='true',updated_at:new Date().toISOString()}).eq('id',b.dataset.toggle);if(error){status('Modifica non riuscita.');console.error(error)}else{status('Visibilità aggiornata.');loadProducts()}});
  }
  function edit(p){$('productId').value=p.id;$('name').value=p.name;$('sku').value=p.sku||'';$('slug').value=p.slug;$('brandType').value=p.brand_type;$('brandName').value=p.brand_name||'';$('category').value=p.category||'';$('price').value=p.price;$('comparePrice').value=p.compare_at_price??'';$('stock').value=p.stock_quantity;$('images').value=(p.images||[]).join('\n');$('description').value=p.description||'';$('active').checked=p.active;$('featured').checked=p.featured;$('formTitle').textContent='Modifica prodotto';window.scrollTo({top:0,behavior:'smooth'});}
@@ -74,6 +95,30 @@
   const payload={name:val('name'),sku:val('sku')||null,slug:val('slug').toLowerCase(),brand_type:val('brandType'),brand_name:val('brandName')||null,category:val('category')||null,description:val('description')||null,price,compare_at_price:compare,stock_quantity:stock,images:val('images').split('\n').map(x=>x.trim()).filter(Boolean),active:$('active').checked,featured:$('featured').checked,updated_at:new Date().toISOString()};
   const id=val('productId');const q=id?db.from('living_products').update(payload).eq('id',id):db.from('living_products').insert(payload);
   const {error}=await q;if(error){status('Salvataggio non riuscito. Controlla i campi e che slug e SKU siano univoci.');console.error(error)}else{status('Prodotto salvato.');resetForm();loadProducts()}
+ };
+ function resetVariantForm(){ $('variantForm').reset();$('variantId').value='';$('variantStock').value='0';$('variantActive').checked=true;$('variantOptions').value='{}';}
+ $('variantReset').onclick=resetVariantForm;
+ $('variantProduct').onchange=()=>{resetVariantForm();loadVariants()};
+ async function loadVariants(){
+  const productId=val('variantProduct'),root=$('variants');
+  if(!productId){root.textContent='Seleziona un prodotto per visualizzarne le varianti.';return}
+  const {data,error}=await db.from('living_product_variants').select('*').eq('product_id',productId).order('created_at',{ascending:false});
+  if(error){root.textContent='Varianti non disponibili: applicare prima la migrazione commerce aggiornata.';console.error(error);return}
+  if(!data?.length){root.textContent='Nessuna variante: puoi crearne una qui sopra.';return}
+  root.innerHTML=data.map(v=>'<div class="item"><div><h3>'+esc(v.name)+'</h3><small class="muted">SKU: '+esc(v.sku||'—')+' · Stock: '+v.stock_quantity+' · Prezzo: '+(v.price_override===null?'prezzo prodotto':'€ '+Number(v.price_override).toLocaleString('it-IT',{minimumFractionDigits:2}))+' · '+(v.active?'Attiva':'Disattiva')+'</small><div>'+esc(JSON.stringify(v.option_values||{}))+'</div></div><div class="actions"><button data-variant-edit="'+v.id+'">Modifica</button><button class="secondary" data-variant-toggle="'+v.id+'" data-active="'+v.active+'">'+(v.active?'Disattiva':'Attiva')+'</button></div></div>').join('');
+  root.querySelectorAll('[data-variant-edit]').forEach(b=>b.onclick=()=>{const v=data.find(x=>x.id===b.dataset.variantEdit);$('variantId').value=v.id;$('variantName').value=v.name;$('variantSku').value=v.sku||'';$('variantPrice').value=v.price_override??'';$('variantStock').value=v.stock_quantity;$('variantOptions').value=JSON.stringify(v.option_values||{},null,2);$('variantImage').value=v.image_url||'';$('variantActive').checked=v.active;window.scrollTo({top:0,behavior:'smooth'});});
+  root.querySelectorAll('[data-variant-toggle]').forEach(b=>b.onclick=async()=>{const {error}=await db.from('living_product_variants').update({active:b.dataset.active!=='true',updated_at:new Date().toISOString()}).eq('id',b.dataset.variantToggle);if(error){status('Modifica variante non riuscita.');console.error(error)}else{status('Stato variante aggiornato.');loadVariants()}});
+ }
+ $('variantForm').onsubmit=async ev=>{
+  ev.preventDefault();const productId=val('variantProduct');
+  if(!productId){status('Seleziona prima il prodotto.');return}
+  const stock=Number(val('variantStock')),price=val('variantPrice')===''?null:Number(val('variantPrice'));
+  let options;try{options=JSON.parse(val('variantOptions')||'{}')}catch{status('Le opzioni devono essere in formato JSON valido.');return}
+  if(!options||Array.isArray(options)||typeof options!=='object'||!Number.isInteger(stock)||stock<0||(price!==null&&(!Number.isFinite(price)||price<0))){status('Controlla prezzo, quantità e opzioni.');return}
+  const image=val('variantImage');if(image){try{const u=new URL(image);if(!['http:','https:'].includes(u.protocol)||u.username||u.password)throw 0}catch{status('L’immagine deve essere un URL HTTP o HTTPS valido.');return}}
+  const payload={product_id:productId,name:val('variantName'),sku:val('variantSku')||null,price_override:price,stock_quantity:stock,option_values:options,image_url:image||null,active:$('variantActive').checked,updated_at:new Date().toISOString()};
+  const id=val('variantId'),q=id?db.from('living_product_variants').update(payload).eq('id',id):db.from('living_product_variants').insert(payload);
+  const {error}=await q;if(error){status('Salvataggio variante non riuscito. Verifica SKU univoco e migrazione.');console.error(error)}else{status('Variante salvata.');resetVariantForm();loadVariants()}
  };
  async function loadOrders(){
   const root=$('orders');const {data,error}=await db.from('living_orders').select('id,order_number,customer_name,customer_email,total,payment_status,fulfillment_status,tracking_code,created_at').order('created_at',{ascending:false}).limit(100);
