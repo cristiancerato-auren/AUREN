@@ -79,6 +79,9 @@ assert.match(files.account, /from\('living_order_items'\)/, "Account must load o
 assert.match(files.account, /ordersPanel/, "Account must render the order history panel");
 assert.match(files.account, /from\("profiles"\)/, "Account must load the signed-in user's profile");
 assert.match(files.account, /from\("profiles"\)\.update/, "Account must update only the signed-in user's profile through RLS");
+const profileGrantMigration = read("../supabase/migrations/20261110000300_profiles_contact_update.sql");
+assert.match(profileGrantMigration, /grant update \(full_name, phone\) on public\.profiles to authenticated/i, "Profile updates must be limited to contact columns");
+assert.doesNotMatch(profileGrantMigration, /grant update on public\.profiles to authenticated/i, "Users must not receive table-wide profile update privileges");
 assert.match(files.account, /profilePanel/, "Account must expose profile settings after login");
 assert.match(files.admin, /account_type/);
 assert.match(files.adminLiving, /account_type/);
