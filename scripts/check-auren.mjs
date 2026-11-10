@@ -51,6 +51,12 @@ assert.match(files.privacy, /BOZZA DA COMPLETARE E VALIDARE/, "Privacy draft mus
 assert.match(files.terms, /BOZZA NON VALIDA PER LA VENDITA/, "Sale terms draft must remain clearly marked until completed");
 assert.match(files.adminLiving, /living_orders/);
 assert.match(files.adminLiving, /customer_email/);
+assert.match(files.adminLiving, /orderSearch/, "Admin orders must be searchable");
+assert.match(files.adminLiving, /orderFilter/, "Admin orders must be filterable by fulfillment status");
+assert.match(files.adminLiving, /living_order_items/, "Admin must load order line items");
+assert.match(files.adminLiving, /shipping_address/, "Admin must show shipping details");
+assert.match(files.adminLiving, /customer_note/, "Admin must show delivery notes");
+assert.match(files.adminLiving, /tracking_url/, "Admin must support shipment tracking links");
 const checkoutSource = read("../supabase/functions/create-living-checkout/index.ts");
 assert.match(checkoutSource, /requiredAddressFields = \["line1", "postal_code", "city", "province", "country"\]/, "Checkout address validation must match the storefront payload");
 assert.match(checkoutSource, /raw\.length > 64_000/, "Checkout request body must be size-limited");
