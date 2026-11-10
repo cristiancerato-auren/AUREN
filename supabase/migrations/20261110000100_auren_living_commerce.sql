@@ -223,6 +223,7 @@ begin
     for update;
     if not found then raise exception 'Prodotto non disponibile'; end if;
 
+    v_variant := null;
     v_variant_name := null;
     v_variant_options := '{}'::jsonb;
     if v_variant_id is not null then
@@ -293,4 +294,56 @@ $$;
 revoke all on function public.create_living_order_reservation(text,text,text,jsonb,jsonb,text,uuid,jsonb)
   from public, anon, authenticated;
 grant execute on function public.create_living_order_reservation(text,text,text,jsonb,jsonb,text,uuid,jsonb)
+  to service_role;
+
+
+-- Release reserved stock exactly once when Stripe session creation fails or expires.
+create or replace function public.release_living_order_reservation(p_order_id uuid)
+returns boolean
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_order public.living_orders%rowtype;
+  v_item record;
+begin
+  select * into v_order
+  from public.living_orders
+  where id = p_order_id
+  for update;
+  if not found or v_order.payment_status <> 'pending' then
+    return false;
+  end if;
+
+  for v_item in
+    select product_id,variant_id,quantity
+    from public.living_order_items
+    where order_id = p_order_id
+    order by product_id,coalesce(variant_id::text,'')
+  loop
+    if v_item.variant_id is not null then
+      update public.living_product_variants
+      set stock_quantity = stock_quantity + v_item.quantity,updated_at = now()
+      where id = v_item.variant_id;
+    elsif v_item.product_id is not null then
+      update public.living_products
+      set stock_quantity = stock_quantity + v_item.quantity,updated_at = now()
+      where id = v_item.product_id;
+    end if;
+  end loop;
+
+  update public.living_orders
+  set payment_status = 'failed',
+      fulfillment_status = 'cancelled',
+      reservation_expires_at = null,
+      updated_at = now()
+  where id = p_order_id;
+  return true;
+end;
+$$;
+
+revoke all on function public.release_living_order_reservation(uuid)
+  from public, anon, authenticated;
+grant execute on function public.release_living_order_reservation(uuid)
   to service_role;
