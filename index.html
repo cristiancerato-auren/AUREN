@@ -168,6 +168,17 @@ footer{background:#E7D7C6}
 }
 @media(min-width:761px){.auren-app-nav{display:none!important}}
 </style>
+<style id="auren-install-ui">
+.install-app-btn{display:inline-flex;align-items:center;gap:9px;border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:999px;padding:12px 17px;font-size:13px;font-weight:600}
+.install-app-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.7}
+.install-help{position:fixed;inset:0;z-index:1200;display:none;place-items:center;padding:22px;background:#21181288}
+.install-help.open{display:grid}
+.install-help-card{width:min(100%,420px);padding:30px;background:var(--white);border:1px solid var(--line);box-shadow:0 24px 80px #21181230}
+.install-help-card h2{font:400 30px/1.1 var(--serif);margin:0 0 12px}
+.install-help-card p{color:var(--muted);font-size:14px;line-height:1.65}
+.install-help-card .close-install{margin-top:12px}
+@media(max-width:560px){.hero-actions{display:flex;flex-wrap:wrap;gap:10px}.install-app-btn{padding:11px 14px}}
+</style>
 </head>
 <body>
 <header><div class="wrap nav">
@@ -177,7 +188,10 @@ footer{background:#E7D7C6}
 </div></header>
 <main id="top">
 <section class="wrap hero">
-<div><div class="eyebrow">THE ART OF LIVING WELL</div><h1>Quattro mondi.<br><em>Un’unica visione.</em></h1><p>AUREN riunisce immobiliare, arredamento, servizi creativi e ispirazione in un unico universo. Esplora i quattro mondi e scegli ciò di cui hai bisogno.</p><div class="hero-actions"><a class="btn" href="#divisions">Scopri AUREN ↓</a><a class="text-link" href="#properties">Esplora gli immobili</a></div></div>
+<div><div class="eyebrow">THE ART OF LIVING WELL</div><h1>Quattro mondi.<br><em>Un’unica visione.</em></h1><p>AUREN riunisce immobiliare, arredamento, servizi creativi e ispirazione in un unico universo. Esplora i quattro mondi e scegli ciò di cui hai bisogno.</p><div class="hero-actions"><a class="btn" href="#divisions">Scopri AUREN ↓</a><a class="text-link" href="#properties">Esplora gli immobili</a><button class="install-app-btn" id="installAuren" type="button" aria-label="Installa l'app AUREN">
+<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M4 17v3h16v-3"/></svg>
+<span>Installa AUREN</span>
+</button></div></div>
 <div class="hero-visual"><img src="https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1200&q=85" alt="Interno contemporaneo luminoso"><span class="float-tag">AUREN · EST. IN VISION</span><div class="floating"><small>ONE BRAND, FOUR WORLDS</small><strong>Spaces to belong.</strong></div></div>
 </section>
 <section class="wrap divisions" id="divisions">
@@ -319,6 +333,50 @@ if ("serviceWorker" in navigator) {
   if(link.dataset.appDest===active)link.setAttribute("aria-current","page");
   link.addEventListener("click",()=>{document.querySelectorAll(".auren-app-nav a").forEach(a=>a.removeAttribute("aria-current"));link.setAttribute("aria-current","page")});
  });
+})();
+</script>
+<div class="install-help" id="installHelp" role="dialog" aria-modal="true" aria-labelledby="installHelpTitle" aria-hidden="true">
+<div class="install-help-card">
+<div class="eyebrow">AUREN · APP</div>
+<h2 id="installHelpTitle">Porta AUREN con te.</h2>
+<p id="installHelpText">Aggiungi AUREN alla schermata Home per aprirla come un'app.</p>
+<p><strong>Su iPhone:</strong> apri questa pagina in Safari, tocca il pulsante Condividi e scegli <strong>Aggiungi alla schermata Home</strong>.</p>
+<button class="btn close-install" id="closeInstallHelp" type="button">Ho capito</button>
+</div></div>
+<script id="auren-install-logic">
+(() => {
+ const button=document.getElementById("installAuren");
+ const help=document.getElementById("installHelp");
+ const close=document.getElementById("closeInstallHelp");
+ if(!button||!help||!close)return;
+ let installPrompt=null;
+ const isStandalone=window.matchMedia("(display-mode: standalone)").matches||window.navigator.standalone===true;
+ if(isStandalone){button.hidden=true;return}
+ window.addEventListener("beforeinstallprompt",event=>{
+  event.preventDefault();
+  installPrompt=event;
+ });
+ button.addEventListener("click",async()=>{
+  if(installPrompt){
+   installPrompt.prompt();
+   const choice=await installPrompt.userChoice;
+   if(choice&&choice.outcome==="accepted")button.hidden=true;
+   installPrompt=null;
+   return;
+  }
+  help.classList.add("open");
+  help.setAttribute("aria-hidden","false");
+  close.focus();
+ });
+ const dismiss=()=>{
+  help.classList.remove("open");
+  help.setAttribute("aria-hidden","true");
+  button.focus();
+ };
+ close.addEventListener("click",dismiss);
+ help.addEventListener("click",event=>{if(event.target===help)dismiss()});
+ document.addEventListener("keydown",event=>{if(event.key==="Escape"&&help.classList.contains("open"))dismiss()});
+ window.addEventListener("appinstalled",()=>{button.hidden=true;installPrompt=null});
 })();
 </script>
 </body></html>
