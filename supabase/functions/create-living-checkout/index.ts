@@ -57,7 +57,7 @@ Deno.serve(async (req) => {
   });
   let userId: string | null = null;
   const authHeader = req.headers.get("Authorization");
-  if (authHeader?.startsWith("Bearer ")) {
+  if (authHeader?.startsWith("Bearer ") && authHeader.slice(7).startsWith("eyJ")) {
     const { data, error } = await supabase.auth.getUser(authHeader.slice(7));
     if (error) return json({ error: "Sessione utente non valida" }, 401);
     userId = data.user?.id ?? null;
