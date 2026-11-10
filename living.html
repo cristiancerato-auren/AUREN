@@ -16,6 +16,21 @@ footer{background:#e9dccf;padding:28px 0;color:var(--muted);font-size:12px}.foot
 @media(max-width:800px){.hero{grid-template-columns:1fr;padding-top:45px}.heroimg{height:300px}.products{grid-template-columns:repeat(2,minmax(0,1fr))}.navlinks{gap:12px}}
 @media(max-width:560px){.products{grid-template-columns:1fr}.productimg{height:280px}.navlinks{display:none}.sectionhead{display:block}}
 </style>
+
+<style id="auren-app-navigation">
+:root{--app-nav-bg:#F8F1E8;--app-nav-line:#DCCBBB;--app-nav-ink:#39251B;--app-nav-muted:#8A7869}
+.auren-app-nav{display:none}
+@media(max-width:760px){
+ body{padding-bottom:calc(76px + env(safe-area-inset-bottom))}
+ .auren-app-nav{position:fixed;z-index:1000;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0;padding:8px 8px calc(8px + env(safe-area-inset-bottom));background:rgba(248,241,232,.97);border-top:1px solid var(--app-nav-line);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+ .auren-app-nav a{display:flex;min-width:0;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:var(--app-nav-muted);font:500 9px/1.1 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;letter-spacing:.35px;text-decoration:none!important;padding:4px 1px;white-space:nowrap}
+ .auren-app-nav a svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.55;stroke-linecap:round;stroke-linejoin:round}
+ .auren-app-nav a[aria-current="page"]{color:var(--app-nav-ink)}
+ .auren-app-nav a[aria-current="page"] svg{stroke-width:2}
+ .auren-app-nav a:focus-visible{outline:2px solid var(--app-nav-ink);outline-offset:2px;border-radius:8px}
+}
+@media(min-width:761px){.auren-app-nav{display:none!important}}
+</style>
 </head>
 <body>
 <header><div class="wrap nav"><a class="brand" href="index.html">AUREN</a><nav class="navlinks"><a href="index.html">Home</a><a href="#catalogo">Living</a><a href="index.html#studio">Studio</a><a href="journal.html">Journal</a></nav><button class="cartbtn" id="openCart">Carrello <span id="cartCount">0</span></button></div></header>
@@ -86,6 +101,32 @@ async function load(){const {data,error}=await db.from('living_products').select
 ['search','category','brand','sort'].forEach(id=>$(id).addEventListener(id==='search'?'input':'change',render));
 $('openCart').onclick=()=>{$('drawer').classList.add('open');renderCart()};$('closeCart').onclick=()=>$('drawer').classList.remove('open');$('drawer').onclick=e=>{if(e.target===$('drawer'))$('drawer').classList.remove('open')};
 load();
+})();
+</script>
+
+<nav class="auren-app-nav" aria-label="Navigazione AUREN">
+<a href="index.html#top" data-app-dest="home" aria-label="Home">
+<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7"/><path d="M5 9v12h14V9M9 21v-7h6v7"/></svg><span>Home</span></a>
+<a href="index.html#properties" data-app-dest="properties" aria-label="Properties">
+<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 5 5"/></svg><span>Properties</span></a>
+<a href="living.html" data-app-dest="living" aria-label="Living">
+<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12V8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v4"/><path d="M3 12h18v7H3zM5 19v2m14-2v2M7 12V9m10 3V9"/></svg><span>Living</span></a>
+<a href="index.html#services" data-app-dest="studio" aria-label="Studio">
+<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h16M6 20V8l6-4 6 4v12M9 20v-6h6v6M9 9h.01M15 9h.01"/></svg><span>Studio</span></a>
+<a href="journal.html" data-app-dest="journal" aria-label="Journal">
+<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h11a3 3 0 0 1 3 3v15H8a3 3 0 0 1-3-3z"/><path d="M5 18a3 3 0 0 1 3-3h11M9 8h6m-6 4h6"/></svg><span>Journal</span></a>
+</nav>
+<script id="auren-app-nav-state">
+(() => {
+ const path=location.pathname.split("/").pop()||"index.html";
+ const hash=location.hash;
+ let active=path==="living.html"?"living":path==="journal.html"?"journal":"home";
+ if(path==="index.html"&&hash==="#properties")active="properties";
+ if(path==="index.html"&&(hash==="#services"||hash==="#studio-info"||hash==="#studio"))active="studio";
+ document.querySelectorAll(".auren-app-nav a").forEach(link=>{
+  if(link.dataset.appDest===active)link.setAttribute("aria-current","page");
+  link.addEventListener("click",()=>{document.querySelectorAll(".auren-app-nav a").forEach(a=>a.removeAttribute("aria-current"));link.setAttribute("aria-current","page")});
+ });
 })();
 </script>
 </body></html>
