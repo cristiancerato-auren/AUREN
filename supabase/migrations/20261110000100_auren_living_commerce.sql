@@ -285,7 +285,7 @@ begin
 
   return jsonb_build_object(
     'order_id',v_order_id,'order_number',v_order_number,
-    'subtotal',v_subtotal,'total',v_subtotal,'currency','EUR',
+    'subtotal',v_subtotal,'total',v_subtotal,'currency','EUR','items',v_items,
     'reservation_expires_at',now() + interval '30 minutes'
   );
 end;
