@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { sendLivingOrderEmail } from "../_shared/living-order-email.ts";
 
 function constantTimeEqual(a: string, b: string): boolean {
   if (a.length !== b.length) return false;
@@ -72,7 +73,15 @@ Deno.serve(async (req) => {
         Number(session.amount_total) !== Math.round(Number(pendingOrder.total) * 100)) {
       return new Response("Order/payment amount mismatch", { status: 409 });
     }
-    if (pendingOrder.payment_status === "paid") return new Response("ok", { status: 200 });
+    if (pendingOrder.payment_status === "paid") {
+      try {
+        await sendLivingOrderEmail(supabase, orderId, "paid");
+        return new Response("ok", { status: 200 });
+      } catch (error) {
+        console.error("Paid order email delivery failed", error);
+        return new Response("Order email delivery failed", { status: 500 });
+      }
+    }
     if (pendingOrder.payment_status !== "pending") return new Response("Order is not payable", { status: 409 });
 
     const { data, error } = await supabase.from("living_orders").update({
@@ -97,6 +106,12 @@ Deno.serve(async (req) => {
       if (readError || existing?.provider_session_id !== session.id || existing?.payment_status !== "paid") {
         return new Response("Order/session mismatch", { status: 409 });
       }
+    }
+    try {
+      await sendLivingOrderEmail(supabase, orderId, "paid");
+    } catch (emailError) {
+      console.error("Paid order email delivery failed", emailError);
+      return new Response("Order email delivery failed", { status: 500 });
     }
     return new Response("ok", { status: 200 });
   }
