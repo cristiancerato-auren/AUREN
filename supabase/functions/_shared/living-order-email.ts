@@ -51,8 +51,15 @@ export async function sendLivingOrderEmail(
     const detail = kind === "paid"
       ? "Abbiamo ricevuto il pagamento del tuo ordine."
       : "Il tuo ordine AUREN Living è stato affidato al corriere.";
-    const tracking = kind === "shipped" && order.tracking_url
-      ? `<p>Tracciamento: <a href="${escapeHtml(order.tracking_url)}">${escapeHtml(order.tracking_code || "Segui la spedizione")}</a></p>`
+    let safeTrackingUrl = "";
+    if (kind === "shipped" && order.tracking_url) {
+      try {
+        const parsed = new URL(order.tracking_url);
+        if (parsed.protocol === "https:" && !parsed.username && !parsed.password) safeTrackingUrl = parsed.href;
+      } catch { /* Invalid tracking URL is omitted from customer email. */ }
+    }
+    const tracking = safeTrackingUrl
+      ? `<p>Tracciamento: <a href="${escapeHtml(safeTrackingUrl)}">${escapeHtml(order.tracking_code || "Segui la spedizione")}</a></p>`
       : kind === "shipped" && order.tracking_code
       ? `<p>Codice di tracciamento: ${escapeHtml(order.tracking_code)}</p>`
       : "";
