@@ -29,7 +29,7 @@ export async function sendLivingOrderEmail(
 
   try {
     const { data: order, error } = await supabase.from("living_orders")
-      .select("id,order_number,customer_name,customer_email,total,currency,fulfillment_status,tracking_code,tracking_url")
+      .select("id,order_number,customer_name,customer_email,total,currency,payment_status,fulfillment_status,tracking_code,tracking_url")
       .eq("id", orderId).single();
     if (error || !order) throw new Error("Order not found for email");
 
