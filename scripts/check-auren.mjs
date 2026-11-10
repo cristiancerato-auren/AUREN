@@ -45,6 +45,8 @@ assert.match(files.account, /ordersPanel/, "Account must render the order histor
 assert.match(files.admin, /account_type/);
 assert.match(files.adminLiving, /account_type/);
 assert.match(files.living, /living_products/);
+assert.match(files.living, /Varianti momentaneamente esaurite/, "Storefront must not offer variant products with no available variants");
+assert.match(files.living, /hasVariants\?variants\.length===0/, "Variant stock must determine product availability when variants exist");
 assert.match(files.living, /href="privacy\.html"/, "Checkout must link to the privacy notice");
 assert.match(files.living, /href="terms\.html"/, "Storefront must link to sale terms");
 assert.match(files.privacy, /BOZZA DA COMPLETARE E VALIDARE/, "Privacy draft must remain clearly marked until completed");
