@@ -178,7 +178,7 @@ create or replace function public.create_living_order_reservation(
 returns jsonb
 language plpgsql
 security definer
-set search_path = public, pg_temp
+set search_path = pg_catalog, public, pg_temp
 as $$
 declare
   item jsonb;
@@ -305,7 +305,7 @@ create or replace function public.release_living_order_reservation(p_order_id uu
 returns boolean
 language plpgsql
 security definer
-set search_path = public, pg_temp
+set search_path = pg_catalog, public, pg_temp
 as $$
 declare
   v_order public.living_orders%rowtype;
@@ -358,3 +358,25 @@ alter table public.living_orders
   add column if not exists paid_email_sending_at timestamptz,
   add column if not exists shipped_email_sent_at timestamptz,
   add column if not exists shipped_email_sending_at timestamptz;
+
+
+-- Enforce the paid-before-shipment rule in the database, not only in the admin UI.
+create or replace function public.enforce_living_order_paid_before_shipment()
+returns trigger
+language plpgsql
+set search_path = pg_catalog, public, pg_temp
+as $$
+begin
+  if new.fulfillment_status is distinct from old.fulfillment_status
+     and new.fulfillment_status in ('shipped','delivered')
+     and new.payment_status <> 'paid' then
+    raise exception 'Un ordine non pagato non può essere spedito o consegnato';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists living_orders_paid_before_shipment on public.living_orders;
+create trigger living_orders_paid_before_shipment
+before update of fulfillment_status on public.living_orders
+for each row execute function public.enforce_living_order_paid_before_shipment();
