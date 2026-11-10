@@ -84,6 +84,8 @@ assert.match(checkoutSource, /requiredAddressFields = \["line1", "postal_code", 
 assert.match(checkoutSource, /raw\.length > 64_000/, "Checkout request body must be size-limited");
 assert.match(checkoutSource, /checkoutUrl\.hostname !== "checkout\.stripe\.com"/, "Checkout must redirect only to Stripe's HTTPS checkout host");
 assert.match(checkoutSource, /!linkedOrder/, "Checkout must fail closed if the Stripe session cannot be linked to its pending order");
+assert.match(checkoutSource, /Stripe session request failed/, "Checkout must handle provider/network failures");
+assert.match(checkoutSource, /release_living_order_reservation.*reservation\.order_id/, "Checkout must release reserved stock when Stripe cannot create a session");
 assert.doesNotMatch(files.living, /from\(['"]living_orders['"]\)\.insert/i, "Client must not create unpaid orders");
 for (const [name, content] of Object.entries(files)) {
   assert.doesNotMatch(content, /service_role|SUPABASE_SECRET_KEY|sb_secret_/i, "Secret key detected in " + name);
