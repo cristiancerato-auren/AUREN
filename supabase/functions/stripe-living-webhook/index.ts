@@ -52,6 +52,9 @@ Deno.serve(async (req) => {
   } catch {
     return new Response("Invalid payload", { status: 400 });
   }
+  if (!event || typeof event !== "object" || Array.isArray(event) || typeof event.type !== "string") {
+    return new Response("Invalid event", { status: 400 });
+  }
 
   const handledEvents = new Set([
     "checkout.session.completed",
