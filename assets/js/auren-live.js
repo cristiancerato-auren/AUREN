@@ -52,16 +52,78 @@
       if (error) console.warn('AUREN session:', error.message);
       session = data?.session || null;
       updateAccountLink();
+      if (session) syncFavorites();
     });
   }
   db.auth.onAuthStateChange((_event, nextSession) => {
     session = nextSession;
     updateAccountLink();
+    if (session) Promise.resolve().then(syncFavorites);
   });
   function updateAccountLink() {
     const link = $('accountLink');
     if (link) link.textContent = session ? 'Account' : 'Accedi';
   }
+
+  const FAVORITES_KEY = 'auren.property-favorites.v1';
+  function localFavorites() {
+    try {
+      const value = JSON.parse(localStorage.getItem(FAVORITES_KEY) || '[]');
+      return Array.isArray(value) ? value : [];
+    } catch (_) { return []; }
+  }
+  function storeFavorites(items) {
+    try {
+      localStorage.setItem(FAVORITES_KEY, JSON.stringify(items.slice(0, 100)));
+      return true;
+    } catch (_) { return false; }
+  }
+  async function syncFavorites() {
+    if (!session?.user?.id) return;
+    const userId = session.user.id;
+    const { data: remote, error } = await db.from('property_favorites')
+      .select('property_id,property_data,created_at')
+      .eq('user_id', userId);
+    if (error) {
+      console.warn('AUREN favourites sync:', error.message);
+      return;
+    }
+    const local = localFavorites();
+    const remoteIds = new Set((remote || []).map(row => String(row.property_id)));
+    const merged = new Map();
+    (remote || []).forEach(row => merged.set(String(row.property_id), row.property_data));
+    local.forEach(item => merged.set(String(item.id), item));
+    const missing = local.filter(item => !remoteIds.has(String(item.id))).map(item => ({
+      user_id: userId,
+      property_id: String(item.id),
+      property_data: item
+    }));
+    if (missing.length) {
+      const { error: insertError } = await db.from('property_favorites').insert(missing);
+      if (insertError) console.warn('AUREN favourites upload:', insertError.message);
+    }
+    const combined = Array.from(merged.values()).slice(0, 100);
+    if (storeFavorites(combined)) {
+      window.dispatchEvent(new CustomEvent('auren:favorites-updated'));
+    }
+  }
+  window.addEventListener('auren:favorite-changed', async event => {
+    if (!session?.user?.id || !event.detail?.item) return;
+    const item = event.detail.item;
+    const propertyId = String(item.id);
+    if (event.detail.saved) {
+      const { error } = await db.from('property_favorites').insert({
+        user_id: session.user.id,
+        property_id: propertyId,
+        property_data: item
+      });
+      if (error && error.code !== '23505') console.warn('AUREN favourite save:', error.message);
+    } else {
+      const { error } = await db.from('property_favorites')
+        .delete().eq('user_id', session.user.id).eq('property_id', propertyId);
+      if (error) console.warn('AUREN favourite removal:', error.message);
+    }
+  });
 
   // Real listing submission: requires a signed-in user and creates a pending listing.
   $('listingForm')?.addEventListener('submit', async (event) => {
