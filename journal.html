@@ -72,7 +72,7 @@ footer{border-top:1px solid var(--line);padding:28px 0 36px;display:flex;justify
  const path=location.pathname.split("/").pop()||"index.html";
  const hash=location.hash;
  let active=path==="living.html"?"living":path==="journal.html"?"journal":"home";
- if(path==="index.html"&&hash==="#properties")active="properties";
+ if(path==="index.html"&&(hash==="#properties"||hash==="#explore"))active="properties";
  if(path==="index.html"&&(hash==="#services"||hash==="#studio-info"||hash==="#studio"))active="studio";
  document.querySelectorAll(".auren-app-nav a").forEach(link=>{
   if(link.dataset.appDest===active)link.setAttribute("aria-current","page");
