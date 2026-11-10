@@ -1,0 +1,23 @@
+{
+  "id": "/",
+  "name": "AUREN — The art of living well",
+  "short_name": "AUREN",
+  "description": "Properties, Living, Studio and Journal by AUREN.",
+  "lang": "it",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#F4EEE5",
+  "theme_color": "#39251B",
+  "categories": ["lifestyle", "shopping", "business"],
+  "icons": [
+    {
+      "src": "/assets/icons/auren-app.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
