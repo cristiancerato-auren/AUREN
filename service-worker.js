@@ -39,7 +39,8 @@ self.addEventListener("fetch", (event) => {
   if (request.mode === "navigate") {
     event.respondWith(
       fetch(request).catch(async () => {
-        const cached = await caches.match(OFFLINE_URL);
+        const cachedPage = await caches.match(request);
+        const cached = cachedPage || await caches.match(OFFLINE_URL);
         return cached || new Response("AUREN è offline. Riprova quando torni online.", {
           status: 503,
           headers: { "Content-Type": "text/plain; charset=utf-8" }
