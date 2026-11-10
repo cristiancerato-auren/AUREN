@@ -55,7 +55,7 @@
 </div>
 <div id="variants" class="muted">Seleziona un prodotto per visualizzarne le varianti.</div>
 </div>
-<div class="panel"><h2>Ordini ricevuti</h2><p class="muted">Gli ordini e i pagamenti saranno creati dal checkout server-side. Qui potrai gestire evasione e tracciamento.</p><div id="orders"></div></div>
+<div class="panel"><h2>Ordini ricevuti</h2><p class="muted">Dettagli cliente, articoli, indirizzo, pagamento, evasione e tracciamento.</p><div class="grid" style="margin-bottom:14px"><label class="field">Cerca ordine, cliente o email<input id="orderSearch" type="search" placeholder="Numero ordine, nome, email…"></label><label class="field">Filtra per evasione<select id="orderFilter"><option value="">Tutti gli ordini</option><option value="unfulfilled">Da evadere</option><option value="processing">In preparazione</option><option value="shipped">Spediti</option><option value="delivered">Consegnati</option><option value="cancelled">Annullati</option></select></label></div><div id="orders"></div></div>
 </section>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -121,12 +121,29 @@
   const {error}=await q;if(error){status('Salvataggio variante non riuscito. Verifica SKU univoco e migrazione.');console.error(error)}else{status('Variante salvata.');resetVariantForm();loadVariants()}
  };
  async function loadOrders(){
-  const root=$('orders');const {data,error}=await db.from('living_orders').select('id,order_number,customer_name,customer_email,total,payment_status,fulfillment_status,tracking_code,tracking_url,created_at').order('created_at',{ascending:false}).limit(100);
-  if(error){root.textContent='Ordini non ancora disponibili: applicare prima la migrazione commerce.';return}
+  const root=$('orders');
+  const {data,error}=await db.from('living_orders').select('id,order_number,customer_name,customer_email,phone,shipping_address,customer_note,subtotal,shipping_total,total,currency,payment_status,fulfillment_status,tracking_code,tracking_url,created_at').order('created_at',{ascending:false}).limit(100);
+  if(error){root.textContent='Ordini non ancora disponibili: applicare prima la migrazione commerce.';console.error(error);return}
   if(!data?.length){root.textContent='Nessun ordine ricevuto.';return}
-  root.innerHTML=data.map(o=>'<div class="item"><div><h3>Ordine #'+o.order_number+' · € '+Number(o.total).toLocaleString('it-IT',{minimumFractionDigits:2})+'</h3><div>'+esc(o.customer_name)+' · '+esc(o.customer_email)+'</div><small>Pagamento: '+esc(o.payment_status)+' · Spedizione: '+esc(o.fulfillment_status)+' · Tracking: '+esc(o.tracking_code||'—')+'</small></div><div class="actions"><select data-fulfill="'+o.id+'"><option value="unfulfilled">Da evadere</option><option value="processing">In preparazione</option><option value="shipped">Spedito</option><option value="delivered">Consegnato</option><option value="cancelled">Annullato</option></select><input data-track="'+o.id+'" placeholder="Codice tracking" value="'+esc(o.tracking_code||'')+'"><input data-track-url="'+o.id+'" type="url" placeholder="URL tracking HTTPS" value="'+esc(o.tracking_url||'')+'"><button data-save-order="'+o.id+'">Aggiorna</button></div></div>').join('');
-  data.forEach(o=>{const s=root.querySelector('[data-fulfill="'+o.id+'"]');if(s)s.value=o.fulfillment_status});
-  root.querySelectorAll('[data-save-order]').forEach(b=>b.onclick=async()=>{const id=b.dataset.saveOrder;const fulfillment_status=root.querySelector('[data-fulfill="'+id+'"]').value;const tracking_code=root.querySelector('[data-track="'+id+'"]').value.trim()||null;const rawTrackingUrl=root.querySelector('[data-track-url="'+id+'"]').value.trim();let tracking_url=null;if(rawTrackingUrl){try{const parsed=new URL(rawTrackingUrl);if(parsed.protocol!=='https:'||parsed.username||parsed.password)throw new Error('invalid');tracking_url=parsed.href}catch{status('Inserisci un link di tracking HTTPS valido.');return}}const {error}=await db.from('living_orders').update({fulfillment_status,tracking_code,tracking_url,updated_at:new Date().toISOString()}).eq('id',id);if(error){status('Aggiornamento ordine non riuscito.');console.error(error)}else{status('Ordine aggiornato.');loadOrders()}});
+  const ids=data.map(o=>o.id);
+  const {data:items,error:itemError}=await db.from('living_order_items').select('order_id,product_name,sku,quantity,unit_price,line_total,variant_name,variant_options').in('order_id',ids);
+  if(itemError){status('Ordini caricati, ma non è stato possibile leggere gli articoli.');console.error(itemError)}
+  const byOrder=new Map();
+  (items||[]).forEach(i=>{if(!byOrder.has(i.order_id))byOrder.set(i.order_id,[]);byOrder.get(i.order_id).push(i)});
+  const render=()=>{
+   const term=val('orderSearch').toLowerCase(),filter=val('orderFilter');
+   const visible=data.filter(o=>(!filter||o.fulfillment_status===filter)&&(!term||[o.order_number,o.customer_name,o.customer_email,o.id].some(v=>String(v||'').toLowerCase().includes(term))));
+   if(!visible.length){root.textContent='Nessun ordine corrisponde ai filtri.';return}
+   root.innerHTML=visible.map(o=>{
+    const addr=o.shipping_address&&typeof o.shipping_address==='object'?o.shipping_address:{};
+    const address=[addr.line1,addr.line2,addr.postal_code,addr.city,addr.province,addr.country].filter(Boolean).join(', ');
+    const lines=(byOrder.get(o.id)||[]).map(i=>'<li>'+esc(i.product_name)+' '+(i.variant_name?'· '+esc(i.variant_name)+' ':'')+'× '+Number(i.quantity)+' — € '+Number(i.line_total).toLocaleString('it-IT',{minimumFractionDigits:2})+'</li>').join('');
+    return '<article class="item" style="grid-template-columns:1fr"><div><h3>Ordine #'+esc(o.order_number)+' · € '+Number(o.total).toLocaleString('it-IT',{minimumFractionDigits:2})+'</h3><div>'+esc(o.customer_name)+' · '+esc(o.customer_email)+' · '+esc(o.phone||'Telefono non indicato')+'</div><small class="muted">'+new Date(o.created_at).toLocaleString('it-IT')+' · Pagamento: '+esc(o.payment_status)+' · Evasione: '+esc(o.fulfillment_status)+'</small><p><strong>Spedizione:</strong> '+esc(address||'Indirizzo non disponibile')+'</p><p><strong>Articoli:</strong></p><ul>'+(lines||'<li>Dettaglio articoli non disponibile</li>')+'</ul><small class="muted">Subtotale € '+Number(o.subtotal).toLocaleString('it-IT',{minimumFractionDigits:2})+' · Spedizione € '+Number(o.shipping_total).toLocaleString('it-IT',{minimumFractionDigits:2})+'</small>'+(o.customer_note?'<p><strong>Note:</strong> '+esc(o.customer_note)+'</p>':'')+'</div><div class="actions"><select data-fulfill="'+o.id+'"><option value="unfulfilled">Da evadere</option><option value="processing">In preparazione</option><option value="shipped">Spedito</option><option value="delivered">Consegnato</option><option value="cancelled">Annullato</option></select><input data-track="'+o.id+'" placeholder="Codice tracking" value="'+esc(o.tracking_code||'')+'"><input data-track-url="'+o.id+'" type="url" placeholder="URL tracking HTTPS" value="'+esc(o.tracking_url||'')+'"><button data-save-order="'+o.id+'">Aggiorna ordine</button></div></article>';
+   }).join('');
+   visible.forEach(o=>{const s=root.querySelector('[data-fulfill="'+o.id+'"]');if(s)s.value=o.fulfillment_status});
+   root.querySelectorAll('[data-save-order]').forEach(b=>b.onclick=async()=>{const id=b.dataset.saveOrder;const fulfillment_status=root.querySelector('[data-fulfill="'+id+'"]').value;const tracking_code=root.querySelector('[data-track="'+id+'"]').value.trim()||null;const rawTrackingUrl=root.querySelector('[data-track-url="'+id+'"]').value.trim();let tracking_url=null;if(rawTrackingUrl){try{const parsed=new URL(rawTrackingUrl);if(parsed.protocol!=='https:'||parsed.username||parsed.password)throw new Error('invalid');tracking_url=parsed.href}catch{status('Inserisci un link di tracking HTTPS valido.');return}}const {error}=await db.from('living_orders').update({fulfillment_status,tracking_code,tracking_url,updated_at:new Date().toISOString()}).eq('id',id);if(error){status('Aggiornamento ordine non riuscito.');console.error(error)}else{const order=data.find(x=>x.id===id);order.fulfillment_status=fulfillment_status;order.tracking_code=tracking_code;order.tracking_url=tracking_url;status('Ordine aggiornato.');render()}});
+  };
+  $('orderSearch').oninput=render;$('orderFilter').onchange=render;render();
  }
  init().catch(e=>{console.error(e);status('Errore durante il caricamento dell’area amministrativa.')});
 })();
