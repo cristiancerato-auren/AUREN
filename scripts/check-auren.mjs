@@ -9,6 +9,8 @@ const files = {
   admin: read("../admin.html"),
   living: read("../living.html"),
   adminLiving: read("../admin-living.html"),
+  privacy: read("../privacy.html"),
+  terms: read("../terms.html"),
   live: read("../assets/js/auren-live.js")
 };
 
@@ -43,6 +45,10 @@ assert.match(files.account, /ordersPanel/, "Account must render the order histor
 assert.match(files.admin, /account_type/);
 assert.match(files.adminLiving, /account_type/);
 assert.match(files.living, /living_products/);
+assert.match(files.living, /href="privacy\.html"/, "Checkout must link to the privacy notice");
+assert.match(files.living, /href="terms\.html"/, "Storefront must link to sale terms");
+assert.match(files.privacy, /BOZZA DA COMPLETARE E VALIDARE/, "Privacy draft must remain clearly marked until completed");
+assert.match(files.terms, /BOZZA NON VALIDA PER LA VENDITA/, "Sale terms draft must remain clearly marked until completed");
 assert.match(files.adminLiving, /living_orders/);
 assert.match(files.adminLiving, /customer_email/);
 assert.doesNotMatch(files.living, /from\(['"]living_orders['"]\)\.insert/i, "Client must not create unpaid orders");
