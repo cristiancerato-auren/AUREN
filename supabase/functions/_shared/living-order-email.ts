@@ -33,11 +33,14 @@ export async function sendLivingOrderEmail(
       .eq("id", orderId).single();
     if (error || !order) throw new Error("Order not found for email");
 
-    if (kind === "paid" && order.payment_status === "failed") {
-      throw new Error("Cannot send paid confirmation for failed order");
+    if (kind === "paid" && order.payment_status !== "paid") {
+      throw new Error("Paid confirmation requires a paid order");
     }
     if (kind === "shipped" && order.fulfillment_status !== "shipped") {
       throw new Error("Shipment email requires shipped fulfillment status");
+    }
+    if (kind === "shipped" && order.payment_status !== "paid") {
+      throw new Error("Shipment email requires a paid order");
     }
     const { data: items, error: itemsError } = await supabase.from("living_order_items")
       .select("product_name,variant_name,quantity,line_total")
