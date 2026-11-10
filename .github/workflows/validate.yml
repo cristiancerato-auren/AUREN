@@ -1,7 +1,7 @@
 name: Validate AUREN production
 on:
   push:
-    branches: ["main"]
+    branches: ["main", "auren-living-development"]
   workflow_dispatch:
 permissions:
   contents: read
