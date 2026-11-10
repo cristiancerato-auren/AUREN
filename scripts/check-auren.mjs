@@ -18,6 +18,7 @@ const files = {
   account: read("../account.html"),
   admin: read("../admin.html"),
   living: read("../living.html"),
+  studio: read("../studio.html"),
   adminLiving: read("../admin-living.html"),
   privacy: read("../privacy.html"),
   terms: read("../terms.html"),
@@ -38,17 +39,21 @@ checkHtmlScripts(files.index, "index.html");
 checkHtmlScripts(files.account, "account.html");
 checkHtmlScripts(files.admin, "admin.html");
 checkHtmlScripts(files.living, "living.html");
+checkHtmlScripts(files.studio, "studio.html");
 checkHtmlScripts(files.adminLiving, "admin-living.html");
 new vm.Script(files.live, {filename:"assets/js/auren-live.js"});
 console.log("✓ Live Supabase integration JavaScript syntax");
 
 assert.match(files.index, /href=["']account\.html["']/i);
-for (const page of [files.index, files.living, files.account, read('../journal.html')]) {
+for (const page of [files.index, files.living, files.studio, files.account, read('../journal.html')]) {
   assert.ok(page.includes('auren-app-nav'), 'Every main AUREN page must include mobile navigation');
   assert.ok(page.includes('rel="manifest"'), 'Every main AUREN page must expose the install manifest');
   assert.ok(page.includes('serviceWorker.register'), 'Every main AUREN page must register the offline shell');
   assert.ok(page.includes('data-app-dest="journal"'), 'Every main AUREN page must link to Journal');
 }
+assert.ok(files.studio.includes('AUREN Studio'), 'Studio must have a dedicated branded service page');
+assert.ok(files.studio.includes('data-app-dest="studio"'), 'Studio page must expose its app navigation destination');
+assert.ok(manifest.shortcuts.find((item) => item.short_name === 'Studio').url === '/studio.html', 'Studio app shortcut must open the dedicated page');
 assert.ok(files.index.includes('installAuren'), 'Homepage must provide an app installation entry point');
 assert.ok(files.index.includes('beforeinstallprompt'), 'Install flow must support native PWA installation');
 assert.ok(files.index.includes('auren.property-favorites.v1'), 'Property favourites must persist on this device');
