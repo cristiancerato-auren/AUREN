@@ -34,6 +34,10 @@ footer{border-top:1px solid var(--line);padding:28px 0 36px;display:flex;justify
 }
 @media(min-width:761px){.auren-app-nav{display:none!important}}
 </style>
+
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/assets/icons/auren-app.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/assets/icons/auren-app.svg">
 </head>
 <body>
 <header><div class="wrap nav"><a class="brand" href="index.html">AUREN<small>LIVING · PROPERTY · STUDIO</small></a><nav class="navlinks" aria-label="Navigazione principale"><a href="index.html">Home</a><a href="index.html#living">Living</a><a href="index.html#property">Property</a><a href="index.html#studio">Studio</a><a href="journal.html" aria-current="page">Journal</a><a href="account.html">Account</a></nav></div></header>
@@ -75,5 +79,14 @@ footer{border-top:1px solid var(--line);padding:28px 0 36px;display:flex;justify
   link.addEventListener("click",()=>{document.querySelectorAll(".auren-app-nav a").forEach(a=>a.removeAttribute("aria-current"));link.setAttribute("aria-current","page")});
  });
 })();
+</script>
+
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/service-worker.js", { scope: "/" })
+      .catch((error) => console.warn("AUREN offline support unavailable:", error));
+  });
+}
 </script>
 </body></html>
