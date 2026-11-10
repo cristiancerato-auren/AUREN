@@ -27,7 +27,7 @@ create table if not exists public.living_orders (
   order_number bigint generated always as identity unique,
   user_id uuid references auth.users(id) on delete set null,
   customer_name text not null,
-  email text not null,
+  customer_email text not null,
   phone text,
   shipping_address jsonb not null,
   billing_address jsonb,
@@ -81,6 +81,16 @@ create table if not exists public.living_product_variants (
 );
 create index if not exists living_product_variants_product_idx
   on public.living_product_variants(product_id, active);
+
+-- Preserve the exact selected variant on each order, even if the catalogue changes later.
+alter table public.living_order_items
+  add column if not exists variant_id uuid references public.living_product_variants(id) on delete set null,
+  add column if not exists variant_name text,
+  add column if not exists variant_options jsonb not null default '{}'::jsonb
+    check (jsonb_typeof(variant_options) = 'object');
+
+create index if not exists living_order_items_variant_idx
+  on public.living_order_items(variant_id);
 
 alter table public.living_product_variants enable row level security;
 
