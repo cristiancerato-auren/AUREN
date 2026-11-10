@@ -20,10 +20,16 @@ Deno.serve(async (req) => {
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+  const shippingCentsRaw = Deno.env.get("SHIPPING_FLAT_RATE_CENTS");
   const siteUrl = (Deno.env.get("SITE_URL") ?? "https://aurenliving.it").replace(/\/$/, "");
-  if (!supabaseUrl || !serviceKey || !stripeKey) {
-    return json({ error: "Checkout non configurato sul server" }, 503);
+  if (!supabaseUrl || !serviceKey || !stripeKey || shippingCentsRaw === undefined) {
+    return json({ error: "Checkout non configurato: manca anche la tariffa di spedizione" }, 503);
   }
+  const shippingCents = Number(shippingCentsRaw);
+  if (!Number.isSafeInteger(shippingCents) || shippingCents < 0 || shippingCents > 100000) {
+    return json({ error: "Tariffa di spedizione non valida" }, 503);
+  }
+  const shippingTotal = shippingCents / 100;
 
   let body: Record<string, unknown>;
   try {
@@ -73,6 +79,7 @@ Deno.serve(async (req) => {
       p_shipping_address: shippingAddress,
       p_billing_address: billingAddress,
       p_customer_note: customerNote,
+      p_shipping_total: shippingTotal,
       p_user_id: userId,
       p_items: safeItems,
     },
@@ -89,6 +96,12 @@ Deno.serve(async (req) => {
   form.set("success_url", siteUrl + "/living.html?checkout=success&session_id={CHECKOUT_SESSION_ID}");
   form.set("cancel_url", siteUrl + "/living.html?checkout=cancelled");
   form.set("customer_email", customerEmail);
+  if (shippingCents > 0) {
+    form.set("shipping_options[0][shipping_rate_data][type]", "fixed_amount");
+    form.set("shipping_options[0][shipping_rate_data][fixed_amount][amount]", String(shippingCents));
+    form.set("shipping_options[0][shipping_rate_data][fixed_amount][currency]", "eur");
+    form.set("shipping_options[0][shipping_rate_data][display_name]", "Spedizione");
+  }
   form.set("client_reference_id", reservation.order_id);
   form.set("metadata[order_id]", reservation.order_id);
   reservation.items.forEach((item: Record<string, unknown>, index: number) => {
