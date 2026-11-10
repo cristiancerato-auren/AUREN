@@ -267,7 +267,7 @@ begin
   ) values (
     p_user_id,trim(p_customer_name),trim(p_customer_email),nullif(trim(coalesce(p_phone,'')),''),
     p_shipping_address,p_billing_address,v_subtotal,0,v_subtotal,'EUR','pending','unfulfilled',
-    now() + interval '30 minutes',nullif(trim(coalesce(p_customer_note,'')),'')
+    now() + interval '35 minutes',nullif(trim(coalesce(p_customer_note,'')),'')
   ) returning id,order_number into v_order_id,v_order_number;
 
   insert into public.living_order_items(
@@ -286,7 +286,7 @@ begin
   return jsonb_build_object(
     'order_id',v_order_id,'order_number',v_order_number,
     'subtotal',v_subtotal,'total',v_subtotal,'currency','EUR','items',v_items,
-    'reservation_expires_at',now() + interval '30 minutes'
+    'reservation_expires_at',now() + interval '35 minutes'
   );
 end;
 $$;
