@@ -31,23 +31,35 @@ Deno.serve(async (req) => {
   }
   const shippingTotal = shippingCents / 100;
 
+  const contentLength = Number(req.headers.get("content-length") ?? "0");
+  if (contentLength > 64_000) return json({ error: "Richiesta troppo grande" }, 413);
   let body: Record<string, unknown>;
   try {
-    body = await req.json();
+    const raw = await req.text();
+    if (raw.length > 64_000) return json({ error: "Richiesta troppo grande" }, 413);
+    body = JSON.parse(raw);
+    if (!body || typeof body !== "object" || Array.isArray(body)) throw new Error("Invalid object");
   } catch {
     return json({ error: "Richiesta non valida" }, 400);
   }
 
   const customerName = typeof body.customer_name === "string" ? body.customer_name.trim() : "";
-  const customerEmail = typeof body.customer_email === "string" ? body.customer_email.trim() : "";
+  const customerEmail = typeof body.customer_email === "string" ? body.customer_email.trim().toLowerCase() : "";
   const phone = typeof body.phone === "string" ? body.phone.trim() : "";
   const shippingAddress = body.shipping_address;
   const billingAddress = body.billing_address ?? null;
-  const customerNote = typeof body.customer_note === "string" ? body.customer_note.trim().slice(0, 1000) : null;
+  const customerNote = typeof body.customer_note === "string" ? body.customer_note.trim() : "";
   const items = body.items;
+  const address = shippingAddress && typeof shippingAddress === "object" && !Array.isArray(shippingAddress)
+    ? shippingAddress as Record<string, unknown> : null;
+  const requiredAddressFields = ["address", "postal_code", "city", "province", "country"];
+  const addressValid = !!address && requiredAddressFields.every((key) =>
+    typeof address[key] === "string" && (address[key] as string).trim().length > 0 &&
+    (address[key] as string).trim().length <= (key === "address" ? 180 : 100)
+  );
   if (!customerName || customerName.length > 160 ||
-      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail) ||
-      !shippingAddress || typeof shippingAddress !== "object" || Array.isArray(shippingAddress) ||
+      customerEmail.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail) ||
+      phone.length > 40 || customerNote.length > 1000 || !addressValid ||
       !Array.isArray(items) || items.length < 1 || items.length > 50) {
     return json({ error: "Controlla i dati del cliente, la spedizione e i prodotti" }, 400);
   }
