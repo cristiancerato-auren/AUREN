@@ -41,6 +41,14 @@ new vm.Script(files.live, {filename:"assets/js/auren-live.js"});
 console.log("✓ Live Supabase integration JavaScript syntax");
 
 assert.match(files.index, /href=["']account\.html["']/i);
+for (const page of [files.index, files.living, files.account, read('../journal.html')]) {
+  assert.ok(page.includes('auren-app-nav'), 'Every main AUREN page must include mobile navigation');
+  assert.ok(page.includes('data-app-dest="journal"'), 'Every main AUREN page must link to Journal');
+}
+assert.ok(files.index.includes('installAuren'), 'Homepage must provide an app installation entry point');
+assert.ok(files.index.includes('beforeinstallprompt'), 'Install flow must support native PWA installation');
+console.log('AUREN mobile navigation and install entry point checks passed');
+
 assert.match(files.index, /assets\/js\/auren-live\.js/);
 assert.ok(files.index.includes("rel=\"manifest\""));
 assert.ok(files.index.includes("serviceWorker.register"));
