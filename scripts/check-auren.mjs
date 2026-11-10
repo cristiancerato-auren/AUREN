@@ -55,6 +55,14 @@ assert.ok(files.index.includes('auren.property-favorites.v1'), 'Property favouri
 assert.ok(files.index.includes('aria-pressed'), 'Favourite controls must expose their selected state');
 assert.ok(files.account.includes('favoritesPanel'), 'Account must expose saved properties');
 assert.ok(files.account.includes('renderFavorites'), 'Account must render saved properties');
+assert.ok(files.account.includes('syncCloudFavorites'), 'Account must synchronize favourites after login');
+assert.ok(files.account.includes("from(\"property_favorites\")"), 'Account must read and delete its own cloud favourites');
+assert.ok(files.live.includes("from('property_favorites')"), 'Homepage must synchronize favourite changes to Supabase');
+assert.ok(files.index.includes('auren:favorite-changed'), 'Homepage must notify the signed-in sync layer when favourites change');
+const favouritesMigration = read("../supabase/migrations/20261110000200_property_favorites.sql");
+assert.match(favouritesMigration, /enable row level security/i, 'Cloud favourites must enable RLS');
+assert.match(favouritesMigration, /grant select, insert, delete on public\.property_favorites to authenticated/i, 'Cloud favourites must use explicit Data API grants');
+assert.match(favouritesMigration, /auth\.uid\(\).*user_id|auth\.uid\(\)\) = user_id/i, 'Cloud favourites must restrict rows to their owner');
 
 console.log('AUREN mobile navigation and install entry point checks passed');
 
