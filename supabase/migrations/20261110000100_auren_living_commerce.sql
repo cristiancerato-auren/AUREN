@@ -349,3 +349,11 @@ revoke all on function public.release_living_order_reservation(uuid)
   from public, anon, authenticated;
 grant execute on function public.release_living_order_reservation(uuid)
   to service_role;
+
+
+-- Email delivery state: leases prevent concurrent duplicate sends; sent timestamps make retries idempotent.
+alter table public.living_orders
+  add column if not exists paid_email_sent_at timestamptz,
+  add column if not exists paid_email_sending_at timestamptz,
+  add column if not exists shipped_email_sent_at timestamptz,
+  add column if not exists shipped_email_sending_at timestamptz;
