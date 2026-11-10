@@ -10,7 +10,9 @@ Questo documento descrive ciò che deve essere completato prima di attivare gli 
 - [x] Prezzi e disponibilità ricalcolati e bloccati in transazione SQL.
 - [x] Struttura Stripe Checkout e webhook con verifica firma.
 - [x] Area cliente con cronologia ordini, protetta dalle policy RLS previste.
-- [x] Pannello admin per catalogo, varianti, ordini e aggiornamento tracking.
+- [x] Pannello admin per catalogo, varianti, ordini, filtri e aggiornamento tracking.
+- [x] Codice email transazionali per conferma pagamento e spedizione, con protezione da invii duplicati.
+- [ ] Configurazione Resend e collaudo reale delle email su ambiente di test.
 - [x] Bozze informative privacy e condizioni di vendita, marcate chiaramente come non definitive.
 - [ ] Migrazione SQL testata su database isolato e poi approvata.
 - [ ] Verifica RLS con account anonimo, cliente A, cliente B e amministratore.
@@ -18,7 +20,8 @@ Questo documento descrive ciò che deve essere completato prima di attivare gli 
 - [ ] Dati legali del venditore inseriti e informativa/condizioni revisionate.
 - [ ] Modalità Stripe test configurata, webhook registrato e segreti impostati.
 - [ ] Test end-to-end: pagamento riuscito, annullamento, scadenza, retry webhook, stock concorrente.
-- [ ] Email transazionali e riconciliazione pagamenti implementate e collaudate.
+- [ ] Email transazionali collaudate su ambiente di test.
+- [ ] Riconciliazione pagamenti implementata e collaudata.
 - [ ] Backup verificato, piano di rollback e approvazione esplicita prima del rilascio.
 
 ## Dati commerciali da definire
@@ -61,6 +64,8 @@ Segreti da impostare solo nell'ambiente server Supabase, mai nel browser o nel r
 - `STRIPE_SECRET_KEY` (prima test)
 - `STRIPE_WEBHOOK_SECRET`
 - `SITE_URL`
+- `RESEND_API_KEY`
+- `LIVING_ORDER_EMAIL_FROM` — mittente su dominio verificato in Resend, ad esempio un indirizzo `@aurenliving.it`.
 - `SHIPPING_FLAT_RATE_CENTS`
 
 L'assenza della tariffa di spedizione deve mantenere il checkout disabilitato: non impostare un valore arbitrario per sbloccarlo.
