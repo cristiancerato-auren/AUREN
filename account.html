@@ -130,7 +130,7 @@ function renderFavorites(){
   const title=document.createElement("strong");title.textContent=String(item.title||"Immobile AUREN");
   const meta=document.createElement("p");meta.style.margin="4px 0";meta.textContent=[item.location,item.area?item.area+" m²":null,item.price?new Intl.NumberFormat("it-IT",{style:"currency",currency:"EUR",maximumFractionDigits:0}).format(item.price):null].filter(Boolean).join(" · ");
   const remove=document.createElement("button");remove.type="button";remove.textContent="Rimuovi";remove.style.cssText="border:1px solid var(--line);background:transparent;color:var(--brown);padding:7px 10px;font-size:12px;margin-top:5px";
-  remove.addEventListener("click",async()=>{const next=readFavorites().filter(saved=>String(saved.id)!==String(item.id));try{localStorage.setItem(FAVORITES_KEY,JSON.stringify(next))}catch{}renderFavorites();if(activeSession?.user?.id){const {error}=await client.from("property_favorites").delete().eq("user_id",activeSession.user.id).eq("property_id",String(item.id));if(error)console.warn("AUREN favourite removal:",error.message)}});
+  remove.addEventListener("click",async()=>{if(activeSession?.user?.id){const {error}=await client.from("property_favorites").delete().eq("user_id",activeSession.user.id).eq("property_id",String(item.id));if(error){state.textContent="Non riesco a rimuovere il preferito dal tuo account. Riprova.";return}}const next=readFavorites().filter(saved=>String(saved.id)!==String(item.id));try{localStorage.setItem(FAVORITES_KEY,JSON.stringify(next))}catch{}renderFavorites()});
   details.append(title,meta,remove);article.append(img,details);root.append(article);
  });
 }
