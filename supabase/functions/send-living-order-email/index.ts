@@ -35,8 +35,14 @@ Deno.serve(async (req) => {
     .select("account_type").eq("id", userData.user.id).maybeSingle();
   if (profileError || profile?.account_type !== "admin") return respond("Forbidden", 403);
 
+  const contentLength = Number(req.headers.get("content-length") ?? "0");
+  if (contentLength > 4_000) return respond("Request too large", 413);
   let body: Record<string, unknown>;
-  try { body = await req.json(); } catch { return respond("Invalid JSON", 400); }
+  try {
+    const raw = await req.text();
+    if (raw.length > 4_000) return respond("Request too large", 413);
+    body = JSON.parse(raw);
+  } catch { return respond("Invalid JSON", 400); }
   if (!body || typeof body !== "object" || Array.isArray(body) ||
       typeof body.order_id !== "string" ||
       !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(body.order_id)) {
