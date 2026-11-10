@@ -57,10 +57,14 @@ assert.match(files.adminLiving, /living_order_items/, "Admin must load order lin
 assert.match(files.adminLiving, /shipping_address/, "Admin must show shipping details");
 assert.match(files.adminLiving, /customer_note/, "Admin must show delivery notes");
 assert.match(files.adminLiving, /tracking_url/, "Admin must support shipment tracking links");
+const commerceMigration = read("../supabase/migrations/20261110000100_auren_living_commerce.sql");
+assert.match(commerceMigration, /paid_email_sent_at/);
+assert.match(commerceMigration, /shipped_email_sent_at/);
 const emailSource = read("../supabase/functions/_shared/living-order-email.ts");
 const webhookSource = read("../supabase/functions/stripe-living-webhook/index.ts");
 const shipmentSource = read("../supabase/functions/send-living-order-email/index.ts");
 assert.match(emailSource, /Idempotency-Key/, "Order emails must use provider idempotency keys");
+assert.match(emailSource, /parsed.protocol === "https:"/, "Email tracking links must be HTTPS-only");
 assert.match(emailSource, /paid_email_sent_at/);
 assert.match(emailSource, /shipped_email_sent_at/);
 assert.match(webhookSource, /sendLivingOrderEmail\(supabase, orderId, "paid"\)/, "Paid webhook must send order confirmation");
