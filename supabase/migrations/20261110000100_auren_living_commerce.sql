@@ -268,7 +268,7 @@ begin
     reservation_expires_at,customer_note
   ) values (
     p_user_id,trim(p_customer_name),trim(p_customer_email),nullif(trim(coalesce(p_phone,'')),''),
-    p_shipping_address,p_billing_address,v_subtotal,0,v_subtotal,'EUR','pending','unfulfilled',
+    p_shipping_address,p_billing_address,v_subtotal,p_shipping_total,v_subtotal+p_shipping_total,'EUR','pending','unfulfilled',
     now() + interval '35 minutes',nullif(trim(coalesce(p_customer_note,'')),'')
   ) returning id,order_number into v_order_id,v_order_number;
 
@@ -295,7 +295,7 @@ $$;
 
 revoke all on function public.create_living_order_reservation(text,text,text,jsonb,jsonb,text,numeric,uuid,jsonb)
   from public, anon, authenticated;
-grant execute on function public.create_living_order_reservation(text,text,text,jsonb,jsonb,text,uuid,jsonb)
+grant execute on function public.create_living_order_reservation(text,text,text,jsonb,jsonb,text,numeric,uuid,jsonb)
   to service_role;
 
 
