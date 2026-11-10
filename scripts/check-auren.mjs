@@ -57,6 +57,16 @@ assert.match(files.adminLiving, /living_order_items/, "Admin must load order lin
 assert.match(files.adminLiving, /shipping_address/, "Admin must show shipping details");
 assert.match(files.adminLiving, /customer_note/, "Admin must show delivery notes");
 assert.match(files.adminLiving, /tracking_url/, "Admin must support shipment tracking links");
+const emailSource = read("../supabase/functions/_shared/living-order-email.ts");
+const webhookSource = read("../supabase/functions/stripe-living-webhook/index.ts");
+const shipmentSource = read("../supabase/functions/send-living-order-email/index.ts");
+assert.match(emailSource, /Idempotency-Key/, "Order emails must use provider idempotency keys");
+assert.match(emailSource, /paid_email_sent_at/);
+assert.match(emailSource, /shipped_email_sent_at/);
+assert.match(webhookSource, /sendLivingOrderEmail\(supabase, orderId, "paid"\)/, "Paid webhook must send order confirmation");
+assert.match(shipmentSource, /account_type/);
+assert.match(shipmentSource, /account_type !== "admin"/, "Shipment emails must be admin-only");
+assert.match(files.adminLiving, /functions\.invoke\('send-living-order-email'/, "Admin shipment update must trigger the email function");
 const checkoutSource = read("../supabase/functions/create-living-checkout/index.ts");
 assert.match(checkoutSource, /requiredAddressFields = \["line1", "postal_code", "city", "province", "country"\]/, "Checkout address validation must match the storefront payload");
 assert.match(checkoutSource, /raw\.length > 64_000/, "Checkout request body must be size-limited");
