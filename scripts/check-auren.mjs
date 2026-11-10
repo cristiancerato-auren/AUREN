@@ -53,6 +53,7 @@ assert.match(files.adminLiving, /living_orders/);
 assert.match(files.adminLiving, /customer_email/);
 assert.match(files.adminLiving, /orderSearch/, "Admin orders must be searchable");
 assert.match(files.adminLiving, /orderFilter/, "Admin orders must be filterable by fulfillment status");
+assert.match(files.adminLiving, /paymentFilter/, "Admin orders must be filterable by payment status");
 assert.match(files.adminLiving, /living_order_items/, "Admin must load order line items");
 assert.match(files.adminLiving, /shipping_address/, "Admin must show shipping details");
 assert.match(files.adminLiving, /customer_note/, "Admin must show delivery notes");
