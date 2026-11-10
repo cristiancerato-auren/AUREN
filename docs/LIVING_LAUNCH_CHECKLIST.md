@@ -16,6 +16,7 @@ Questo documento descrive ciò che deve essere completato prima di attivare gli 
 - [x] Bozze informative privacy e condizioni di vendita, marcate chiaramente come non definitive.
 - [ ] Migrazione SQL testata su database isolato e poi approvata.
 - [ ] Verifica RLS con account anonimo, cliente A, cliente B e amministratore.
+- [ ] Attivare la protezione password compromesse di Supabase Auth prima del lancio (attualmente disabilitata, segnalazione Security Advisor).
 - [ ] Tariffa e regole di spedizione decise e verificate.
 - [ ] Dati legali del venditore inseriti e informativa/condizioni revisionate.
 - [ ] Modalità Stripe test configurata, webhook registrato e segreti impostati.
