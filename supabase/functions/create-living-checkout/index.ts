@@ -113,7 +113,7 @@ Deno.serve(async (req) => {
   const form = new URLSearchParams();
   form.set("mode", "payment");
   // Stripe Checkout permits an expiry from 30 minutes to 24 hours.
-  form.set("expires_at", String(Math.floor(Date.now() / 1000) + 30 * 60));
+  form.set("expires_at", String(Math.floor(Date.now() / 1000) + 31 * 60));
   form.set("success_url", siteUrl + "/living.html?checkout=success&session_id={CHECKOUT_SESSION_ID}");
   form.set("cancel_url", siteUrl + "/living.html?checkout=cancelled");
   form.set("customer_email", customerEmail);
