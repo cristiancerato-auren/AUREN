@@ -73,6 +73,9 @@ assert.match(emailSource, /Idempotency-Key/, "Order emails must use provider ide
 assert.match(emailSource, /parsed.protocol === "https:"/, "Email tracking links must be HTTPS-only");
 assert.match(emailSource, /paid_email_sent_at/);
 assert.match(emailSource, /shipped_email_sent_at/);
+assert.match(emailSource, /kind === "paid" && order\.payment_status !== "paid"/, "Paid confirmation must only be sent for paid orders");
+assert.match(emailSource, /kind === "shipped" && order\.payment_status !== "paid"/, "Shipment notice must only be sent for paid orders");
+assert.match(commerceMigration, /variant_id uuid references public\.living_product_variants\(id\) on delete restrict/, "Historical order variants must not be deleted and corrupt stock restoration");
 assert.match(webhookSource, /sendLivingOrderEmail\(supabase, orderId, "paid"\)/, "Paid webhook must send order confirmation");
 assert.match(shipmentSource, /account_type/);
 assert.match(shipmentSource, /account_type !== "admin"/, "Shipment emails must be admin-only");
