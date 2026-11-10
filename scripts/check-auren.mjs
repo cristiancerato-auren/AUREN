@@ -78,6 +78,9 @@ assert.match(emailSource, /kind === "paid" && order\.payment_status !== "paid"/,
 assert.match(emailSource, /kind === "shipped" && order\.payment_status !== "paid"/, "Shipment notice must only be sent for paid orders");
 assert.match(commerceMigration, /variant_id uuid references public\.living_product_variants\(id\) on delete restrict/, "Historical order variants must not be deleted and corrupt stock restoration");
 assert.match(webhookSource, /sendLivingOrderEmail\(supabase, orderId, "paid"\)/, "Paid webhook must send order confirmation");
+assert.match(webhookSource, /rawBody\.length > 256_000/, "Stripe webhook payload must be size-limited");
+assert.match(webhookSource, /handledEvents\.has\(event\.type\)/, "Unrelated Stripe events must be acknowledged without order metadata");
+assert.match(webhookSource, /startsWith\("cs_"\)/, "Webhook must validate Stripe Checkout session IDs");
 assert.match(shipmentSource, /account_type/);
 assert.match(shipmentSource, /account_type !== "admin"/, "Shipment emails must be admin-only");
 assert.match(shipmentSource, /Access-Control-Allow-Origin/, "Shipment email function must support the storefront origin");
@@ -86,6 +89,7 @@ assert.match(shipmentSource, /raw\.length > 4_000/, "Shipment email endpoint mus
 assert.match(files.adminLiving, /functions\.invoke\('send-living-order-email'/, "Admin shipment update must trigger the email function");
 const checkoutSource = read("../supabase/functions/create-living-checkout/index.ts");
 assert.match(checkoutSource, /requiredAddressFields = \["line1", "postal_code", "city", "province", "country"\]/, "Checkout address validation must match the storefront payload");
+assert.match(checkoutSource, /new URL\(requestOrigin\)\.origin !== new URL\(allowedOrigin\)\.origin/, "Checkout must reject cross-origin browser requests");
 assert.match(checkoutSource, /raw\.length > 64_000/, "Checkout request body must be size-limited");
 assert.match(checkoutSource, /checkoutUrl\.hostname !== "checkout\.stripe\.com"/, "Checkout must redirect only to Stripe's HTTPS checkout host");
 assert.match(checkoutSource, /!linkedOrder/, "Checkout must fail closed if the Stripe session cannot be linked to its pending order");
