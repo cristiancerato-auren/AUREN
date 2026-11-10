@@ -43,6 +43,12 @@ a{color:var(--brown)}.brand{font-family:Georgia,serif;font-size:34px;letter-spac
 </form>
 <button id="forgotBtn" class="primary" type="button" style="background:transparent;color:var(--brown);margin-top:10px">Password dimenticata?</button>
 <button id="logoutBtn" class="primary" type="button" hidden>Esci dall'account</button>
+<section id="favoritesPanel" style="margin-top:28px;border-top:1px solid var(--line);padding-top:22px">
+<h2 style="font:400 24px Georgia,serif">I miei preferiti</h2>
+<p>Gli immobili che hai salvato su questo dispositivo.</p>
+<div id="favoritesStatus" class="status" role="status" aria-live="polite"></div>
+<div id="myFavorites"></div>
+</section>
 <section id="ordersPanel" hidden style="margin-top:28px;border-top:1px solid var(--line);padding-top:22px">
 <h2 style="font:400 24px Georgia,serif">I miei ordini</h2>
 <p>Consulta gli acquisti effettuati con questo account AUREN.</p>
@@ -93,8 +99,27 @@ async function loadMyOrders(){
   }).join('');
  }catch(error){console.error(error);state.textContent='Non riesco a caricare gli ordini. Riprova più tardi.'}
 }
+const FAVORITES_KEY="auren.property-favorites.v1";
+function readFavorites(){try{const value=JSON.parse(localStorage.getItem(FAVORITES_KEY)||"[]");return Array.isArray(value)?value:[]}catch{return []}}
+function renderFavorites(){
+ const root=$("myFavorites"),state=$("favoritesStatus");if(!root||!state)return;
+ const items=readFavorites();root.replaceChildren();
+ state.textContent=items.length?items.length+" immobili salvati":"Non hai ancora salvato immobili. Tocca il cuore su un annuncio per aggiungerlo qui.";
+ items.forEach(item=>{
+  const article=document.createElement("article");article.style.cssText="display:flex;gap:12px;align-items:center;border:1px solid var(--line);padding:10px;margin:10px 0;background:var(--paper)";
+  const img=document.createElement("img");img.src=typeof item.image==="string"&&item.image.startsWith("https://")?item.image:"/assets/icons/auren-app.svg";img.alt="";img.loading="lazy";img.style.cssText="width:88px;height:72px;object-fit:cover;background:var(--cream)";
+  const details=document.createElement("div");details.style.flex="1";
+  const title=document.createElement("strong");title.textContent=String(item.title||"Immobile AUREN");
+  const meta=document.createElement("p");meta.style.margin="4px 0";meta.textContent=[item.location,item.area?item.area+" m²":null,item.price?new Intl.NumberFormat("it-IT",{style:"currency",currency:"EUR",maximumFractionDigits:0}).format(item.price):null].filter(Boolean).join(" · ");
+  const remove=document.createElement("button");remove.type="button";remove.textContent="Rimuovi";remove.style.cssText="border:1px solid var(--line);background:transparent;color:var(--brown);padding:7px 10px;font-size:12px;margin-top:5px";
+  remove.addEventListener("click",()=>{const next=readFavorites().filter(saved=>String(saved.id)!==String(item.id));try{localStorage.setItem(FAVORITES_KEY,JSON.stringify(next))}catch{}renderFavorites()});
+  details.append(title,meta,remove);article.append(img,details);root.append(article);
+ });
+}
+window.addEventListener("storage",event=>{if(event.key===FAVORITES_KEY)renderFavorites()});
 function renderSession(session){const logged=!!session&&!recovery;$('authForm').hidden=logged;$('logoutBtn').hidden=!logged;$('ordersPanel').hidden=!logged;if(logged){$('heading').textContent='Account attivo';$('intro').textContent='Accesso effettuato come '+session.user.email+'.';$('loginTab').hidden=true;$('signupTab').hidden=true;loadMyOrders();}else{$('loginTab').hidden=false;$('signupTab').hidden=false;$('myOrders').replaceChildren();}}
 client.auth.onAuthStateChange((_event,session)=>{renderSession(session)});
+renderFavorites();
 client.auth.getSession().then(({data,error})=>{if(error)message('Impossibile verificare la sessione: '+error.message);else renderSession(data.session)}).catch(()=>message('Servizio account temporaneamente non disponibile. Riprova tra poco.'));
 
 })();
