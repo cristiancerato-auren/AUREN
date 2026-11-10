@@ -174,12 +174,24 @@ Deno.serve(async (req) => {
   }).eq("id", reservation.order_id).eq("payment_status", "pending").select("id").maybeSingle();
 
   if (updateError || !linkedOrder) {
-    await fetch("https://api.stripe.com/v1/checkout/sessions/" + encodeURIComponent(session.id) + "/expire", {
-      method: "POST",
-      headers: { "Authorization": "Bearer " + stripeKey },
-    });
-    await supabase.rpc("release_living_order_reservation", { p_order_id: reservation.order_id });
-    return json({ error: "Errore durante la preparazione dell'ordine" }, 502);
+    // Never release reserved stock unless Stripe confirms that the Checkout
+    // session was expired: otherwise a customer could pay for stock resold.
+    try {
+      const expireResponse = await fetch(
+        "https://api.stripe.com/v1/checkout/sessions/" + encodeURIComponent(session.id) + "/expire",
+        { method: "POST", headers: { "Authorization": "Bearer " + stripeKey } },
+      );
+      if (expireResponse.ok) {
+        await supabase.rpc("release_living_order_reservation", { p_order_id: reservation.order_id });
+      } else {
+        console.error("Stripe session could not be expired; reserved stock left locked for reconciliation", {
+          orderId: reservation.order_id, sessionId: session.id, status: expireResponse.status,
+        });
+      }
+    } catch (expireError) {
+      console.error("Stripe expiry request failed; reserved stock left locked for reconciliation", expireError);
+    }
+    return json({ error: "Errore durante la preparazione dell'ordine. Contatta l'assistenza se hai ricevuto un addebito." }, 502);
   }
 
   return json({ checkout_url: checkoutUrl.href, order_number: reservation.order_number });
