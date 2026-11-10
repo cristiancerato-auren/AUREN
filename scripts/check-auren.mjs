@@ -7,6 +7,8 @@ const files = {
   index: read("../index.html"),
   account: read("../account.html"),
   admin: read("../admin.html"),
+  living: read("../living.html"),
+  adminLiving: read("../admin-living.html"),
   live: read("../assets/js/auren-live.js")
 };
 
@@ -23,6 +25,8 @@ function checkHtmlScripts(html, filename) {
 checkHtmlScripts(files.index, "index.html");
 checkHtmlScripts(files.account, "account.html");
 checkHtmlScripts(files.admin, "admin.html");
+checkHtmlScripts(files.living, "living.html");
+checkHtmlScripts(files.adminLiving, "admin-living.html");
 new vm.Script(files.live, {filename:"assets/js/auren-live.js"});
 console.log("✓ Live Supabase integration JavaScript syntax");
 
@@ -34,6 +38,11 @@ assert.match(files.live, /from\('newsletter_subscribers'\)/);
 assert.match(files.account, /signInWithPassword/);
 assert.match(files.account, /signUp/);
 assert.match(files.admin, /account_type/);
+assert.match(files.adminLiving, /account_type/);
+assert.match(files.living, /living_products/);
+assert.match(files.adminLiving, /living_orders/);
+assert.match(files.adminLiving, /customer_email/);
+assert.doesNotMatch(files.living, /from\(['"]living_orders['"]\)\.insert/i, "Client must not create unpaid orders");
 for (const [name, content] of Object.entries(files)) {
   assert.doesNotMatch(content, /service_role|SUPABASE_SECRET_KEY|sb_secret_/i, "Secret key detected in " + name);
 }
