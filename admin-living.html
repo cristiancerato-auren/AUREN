@@ -55,7 +55,7 @@
 </div>
 <div id="variants" class="muted">Seleziona un prodotto per visualizzarne le varianti.</div>
 </div>
-<div class="panel"><h2>Ordini ricevuti</h2><p class="muted">Dettagli cliente, articoli, indirizzo, pagamento, evasione e tracciamento.</p><div class="grid" style="margin-bottom:14px"><label class="field">Cerca ordine, cliente o email<input id="orderSearch" type="search" placeholder="Numero ordine, nome, email…"></label><label class="field">Filtra per evasione<select id="orderFilter"><option value="">Tutti gli ordini</option><option value="unfulfilled">Da evadere</option><option value="processing">In preparazione</option><option value="shipped">Spediti</option><option value="delivered">Consegnati</option><option value="cancelled">Annullati</option></select></label></div><div id="orders"></div></div>
+<div class="panel"><h2>Ordini ricevuti</h2><p class="muted">Dettagli cliente, articoli, indirizzo, pagamento, evasione e tracciamento.</p><div class="grid" style="margin-bottom:14px"><label class="field">Cerca ordine, cliente o email<input id="orderSearch" type="search" placeholder="Numero ordine, nome, email…"></label><label class="field">Filtra per evasione<select id="orderFilter"><option value="">Tutti gli stati</option><option value="unfulfilled">Da evadere</option><option value="processing">In preparazione</option><option value="shipped">Spediti</option><option value="delivered">Consegnati</option><option value="cancelled">Annullati</option></select></label><label class="field">Filtra per pagamento<select id="paymentFilter"><option value="">Tutti i pagamenti</option><option value="paid">Pagati</option><option value="pending">In attesa</option><option value="failed">Non riusciti</option><option value="refunded">Rimborsati</option><option value="partially_refunded">Parzialmente rimborsati</option></select></label></div><div id="orders"></div></div>
 </section>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -131,8 +131,8 @@
   const byOrder=new Map();
   (items||[]).forEach(i=>{if(!byOrder.has(i.order_id))byOrder.set(i.order_id,[]);byOrder.get(i.order_id).push(i)});
   const render=()=>{
-   const term=val('orderSearch').toLowerCase(),filter=val('orderFilter');
-   const visible=data.filter(o=>(!filter||o.fulfillment_status===filter)&&(!term||[o.order_number,o.customer_name,o.customer_email,o.id].some(v=>String(v||'').toLowerCase().includes(term))));
+   const term=val('orderSearch').toLowerCase(),filter=val('orderFilter'),payment=val('paymentFilter');
+   const visible=data.filter(o=>(!filter||o.fulfillment_status===filter)&&(!payment||o.payment_status===payment)&&(!term||[o.order_number,o.customer_name,o.customer_email,o.id].some(v=>String(v||'').toLowerCase().includes(term))));
    if(!visible.length){root.textContent='Nessun ordine corrisponde ai filtri.';return}
    root.innerHTML=visible.map(o=>{
     const addr=o.shipping_address&&typeof o.shipping_address==='object'?o.shipping_address:{};
@@ -143,7 +143,7 @@
    visible.forEach(o=>{const s=root.querySelector('[data-fulfill="'+o.id+'"]');if(s)s.value=o.fulfillment_status});
    root.querySelectorAll('[data-save-order]').forEach(b=>b.onclick=async()=>{const id=b.dataset.saveOrder;const fulfillment_status=root.querySelector('[data-fulfill="'+id+'"]').value;const tracking_code=root.querySelector('[data-track="'+id+'"]').value.trim()||null;const rawTrackingUrl=root.querySelector('[data-track-url="'+id+'"]').value.trim();let tracking_url=null;if(rawTrackingUrl){try{const parsed=new URL(rawTrackingUrl);if(parsed.protocol!=='https:'||parsed.username||parsed.password)throw new Error('invalid');tracking_url=parsed.href}catch{status('Inserisci un link di tracking HTTPS valido.');return}}const {error}=await db.from('living_orders').update({fulfillment_status,tracking_code,tracking_url,updated_at:new Date().toISOString()}).eq('id',id);if(error){status('Aggiornamento ordine non riuscito.');console.error(error)}else{const order=data.find(x=>x.id===id);order.fulfillment_status=fulfillment_status;order.tracking_code=tracking_code;order.tracking_url=tracking_url;if(fulfillment_status==='shipped'){const {error:emailError}=await db.functions.invoke('send-living-order-email',{body:{order_id:id}});if(emailError){console.error('Shipment email failed',emailError);status('Ordine aggiornato, ma email di spedizione non inviata. Verifica configurazione email.')}else{status('Ordine aggiornato. Email di spedizione inviata o già inviata.')}}else{status('Ordine aggiornato.')}render()}});
   };
-  $('orderSearch').oninput=render;$('orderFilter').onchange=render;render();
+  $('orderSearch').oninput=render;$('orderFilter').onchange=render;$('paymentFilter').onchange=render;render();
  }
  init().catch(e=>{console.error(e);status('Errore durante il caricamento dell’area amministrativa.')});
 })();
