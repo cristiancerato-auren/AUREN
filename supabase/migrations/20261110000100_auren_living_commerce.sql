@@ -200,9 +200,10 @@ begin
      or p_shipping_address is null
      or jsonb_typeof(p_shipping_address) <> 'object'
      or p_shipping_total is null or p_shipping_total < 0
-     or jsonb_typeof(p_items) <> 'array'
-     or jsonb_array_length(p_items) = 0
-     or jsonb_array_length(p_items) > 50 then
+     or p_items is null
+     or jsonb_typeof(p_items) is distinct from 'array'
+     or case when jsonb_typeof(p_items) = 'array' then jsonb_array_length(p_items) else 0 end = 0
+     or case when jsonb_typeof(p_items) = 'array' then jsonb_array_length(p_items) else 0 end > 50 then
     raise exception 'Dati ordine non validi';
   end if;
 
