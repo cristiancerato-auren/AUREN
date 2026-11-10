@@ -45,6 +45,8 @@ console.log("✓ Live Supabase integration JavaScript syntax");
 assert.match(files.index, /href=["']account\.html["']/i);
 for (const page of [files.index, files.living, files.account, read('../journal.html')]) {
   assert.ok(page.includes('auren-app-nav'), 'Every main AUREN page must include mobile navigation');
+  assert.ok(page.includes('rel="manifest"'), 'Every main AUREN page must expose the install manifest');
+  assert.ok(page.includes('serviceWorker.register'), 'Every main AUREN page must register the offline shell');
   assert.ok(page.includes('data-app-dest="journal"'), 'Every main AUREN page must link to Journal');
 }
 assert.ok(files.index.includes('installAuren'), 'Homepage must provide an app installation entry point');
