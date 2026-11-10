@@ -125,17 +125,28 @@ Deno.serve(async (req) => {
       (item.variant_name ? " — " + String(item.variant_name) : ""));
   });
 
-  const stripeResponse = await fetch("https://api.stripe.com/v1/checkout/sessions", {
-    method: "POST",
-    headers: {
-      "Authorization": "Bearer " + stripeKey,
-      "Content-Type": "application/x-www-form-urlencoded",
-      "Idempotency-Key": crypto.randomUUID(),
-    },
-    body: form,
-  });
-
-  const session = await stripeResponse.json();
+  let stripeResponse: Response;
+  let session: Record<string, unknown>;
+  try {
+    stripeResponse = await fetch("https://api.stripe.com/v1/checkout/sessions", {
+      method: "POST",
+      headers: {
+        "Authorization": "Bearer " + stripeKey,
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Idempotency-Key": crypto.randomUUID(),
+      },
+      body: form,
+    });
+    const payload: unknown = await stripeResponse.json();
+    if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+      throw new Error("Invalid Stripe response");
+    }
+    session = payload as Record<string, unknown>;
+  } catch (error) {
+    console.error("Stripe session request failed", error);
+    await supabase.rpc("release_living_order_reservation", { p_order_id: reservation.order_id });
+    return json({ error: "Impossibile avviare il pagamento. Riprova." }, 502);
+  }
   let checkoutUrl: URL | null = null;
   try {
     checkoutUrl = typeof session.url === "string" ? new URL(session.url) : null;
