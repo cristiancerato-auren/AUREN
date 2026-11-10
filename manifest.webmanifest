@@ -58,7 +58,7 @@
       "name": "AUREN Studio",
       "short_name": "Studio",
       "description": "Richiedi servizi creativi",
-      "url": "/index.html#services",
+      "url": "/studio.html",
       "icons": [
         {
           "src": "/assets/icons/auren-app.svg",
