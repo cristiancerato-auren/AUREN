@@ -52,10 +52,10 @@ Deno.serve(async (req) => {
   const items = body.items;
   const address = shippingAddress && typeof shippingAddress === "object" && !Array.isArray(shippingAddress)
     ? shippingAddress as Record<string, unknown> : null;
-  const requiredAddressFields = ["address", "postal_code", "city", "province", "country"];
+  const requiredAddressFields = ["line1", "postal_code", "city", "province", "country"];
   const addressValid = !!address && requiredAddressFields.every((key) =>
     typeof address[key] === "string" && (address[key] as string).trim().length > 0 &&
-    (address[key] as string).trim().length <= (key === "address" ? 180 : 100)
+    (address[key] as string).trim().length <= (key === "line1" ? 180 : 100)
   );
   if (!customerName || customerName.length > 160 ||
       customerEmail.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail) ||
