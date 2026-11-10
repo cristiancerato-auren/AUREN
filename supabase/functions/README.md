@@ -18,6 +18,7 @@ Configurare esclusivamente come Supabase Edge Function secrets, mai nel reposito
 - `SUPABASE_SERVICE_ROLE_KEY` — chiave service role del progetto.
 - `SUPABASE_URL` — URL progetto.
 - `SITE_URL` — origine HTTPS del sito, ad esempio `https://aurenliving.it`.
+- `SHIPPING_FLAT_RATE_CENTS` — tariffa di spedizione fissa in centesimi EUR (es. `790` per €7,90). La funzione rifiuta il checkout se manca o non è valida; `0` va impostato solo se AUREN decide esplicitamente di offrire spedizione gratuita.
 
 La funzione checkout usa anche la sessione utente opzionale nell'header Authorization. L'acquisto guest è possibile con email e indirizzo di spedizione validi.
 
@@ -35,7 +36,7 @@ La funzione checkout usa anche la sessione utente opzionale nell'header Authoriz
 
 ## Limiti da completare prima della vendita reale
 
-- Spedizioni e relativi costi sono attualmente impostati a zero: non attivare vendite finché non sono configurati e mostrati al cliente.
+- La tariffa spedizione è obbligatoria lato server tramite `SHIPPING_FLAT_RATE_CENTS`; il valore deve essere deciso, verificato e comunicato al cliente prima dell'attivazione.
 - La funzione checkout richiede email e indirizzo di spedizione; non gestisce ancora imposte, fatturazione, resi o rimborsi.
 - Serve un processo di riconciliazione per sessioni Stripe pagate ma webhook temporaneamente non recapitati.
 - La UI checkout, la pagina di conferma ordine e le email transazionali non sono ancora collegate.
