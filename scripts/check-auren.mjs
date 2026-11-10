@@ -51,6 +51,11 @@ for (const page of [files.index, files.living, files.account, read('../journal.h
 }
 assert.ok(files.index.includes('installAuren'), 'Homepage must provide an app installation entry point');
 assert.ok(files.index.includes('beforeinstallprompt'), 'Install flow must support native PWA installation');
+assert.ok(files.index.includes('auren.property-favorites.v1'), 'Property favourites must persist on this device');
+assert.ok(files.index.includes('aria-pressed'), 'Favourite controls must expose their selected state');
+assert.ok(files.account.includes('favoritesPanel'), 'Account must expose saved properties');
+assert.ok(files.account.includes('renderFavorites'), 'Account must render saved properties');
+
 console.log('AUREN mobile navigation and install entry point checks passed');
 
 assert.match(files.index, /assets\/js\/auren-live\.js/);
