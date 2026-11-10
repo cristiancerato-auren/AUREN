@@ -284,6 +284,8 @@ function toggleFavorite(property){
  const exists=items.some(item=>String(item.id)===id);
  const next=exists?items.filter(item=>String(item.id)!==id):[{id,title:property.title,location:property.location,price:Number(property.price||0),purpose:property.purpose,type:property.type,area:property.area||null,beds:property.beds||null,image:safeImageURL(property.image),savedAt:new Date().toISOString()},...items];
  if(!writeFavorites(next)){showToast("Memoria del dispositivo non disponibile.");return false}
+ const changedItem=exists?items.find(item=>String(item.id)===id):next[0];
+ window.dispatchEvent(new CustomEvent("auren:favorite-changed",{detail:{saved:!exists,item:changedItem}}));
  showToast(exists?"Rimosso dai preferiti.":"Aggiunto ai preferiti.");
  return !exists;
 }
