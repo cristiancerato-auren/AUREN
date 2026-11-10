@@ -63,6 +63,18 @@ Deno.serve(async (req) => {
       // Do not mark delayed payment methods as paid until Stripe confirms them.
       return new Response("Payment not completed", { status: 200 });
     }
+    const { data: pendingOrder, error: orderReadError } = await supabase.from("living_orders")
+      .select("id,total,currency,payment_status,provider_session_id")
+      .eq("id", orderId).maybeSingle();
+    if (orderReadError) return new Response("Order lookup failed", { status: 500 });
+    if (!pendingOrder || pendingOrder.provider_session_id !== session.id ||
+        session.mode !== "payment" || session.currency !== "eur" ||
+        Number(session.amount_total) !== Math.round(Number(pendingOrder.total) * 100)) {
+      return new Response("Order/payment amount mismatch", { status: 409 });
+    }
+    if (pendingOrder.payment_status === "paid") return new Response("ok", { status: 200 });
+    if (pendingOrder.payment_status !== "pending") return new Response("Order is not payable", { status: 409 });
+
     const { data, error } = await supabase.from("living_orders").update({
       payment_status: "paid",
       reservation_expires_at: null,
