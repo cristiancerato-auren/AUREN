@@ -25,4 +25,4 @@ jobs:
         with:
           deno-version: v2.x
       - name: Type-check checkout and Stripe webhook functions
-        run: deno check supabase/functions/create-living-checkout/index.ts supabase/functions/stripe-living-webhook/index.ts
+        run: deno check supabase/functions/create-living-checkout/index.ts supabase/functions/stripe-living-webhook/index.ts supabase/functions/send-living-order-email/index.ts
