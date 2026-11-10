@@ -171,6 +171,7 @@ create or replace function public.create_living_order_reservation(
   p_shipping_address jsonb,
   p_billing_address jsonb,
   p_customer_note text,
+  p_shipping_total numeric,
   p_user_id uuid,
   p_items jsonb
 )
@@ -198,6 +199,7 @@ begin
      or coalesce(length(trim(p_customer_email)),0) = 0
      or p_shipping_address is null
      or jsonb_typeof(p_shipping_address) <> 'object'
+     or p_shipping_total is null or p_shipping_total < 0
      or jsonb_typeof(p_items) <> 'array'
      or jsonb_array_length(p_items) = 0
      or jsonb_array_length(p_items) > 50 then
@@ -285,13 +287,13 @@ begin
 
   return jsonb_build_object(
     'order_id',v_order_id,'order_number',v_order_number,
-    'subtotal',v_subtotal,'total',v_subtotal,'currency','EUR','items',v_items,
+    'subtotal',v_subtotal,'shipping_total',p_shipping_total,'total',v_subtotal+p_shipping_total,'currency','EUR','items',v_items,
     'reservation_expires_at',now() + interval '35 minutes'
   );
 end;
 $$;
 
-revoke all on function public.create_living_order_reservation(text,text,text,jsonb,jsonb,text,uuid,jsonb)
+revoke all on function public.create_living_order_reservation(text,text,text,jsonb,jsonb,text,numeric,uuid,jsonb)
   from public, anon, authenticated;
 grant execute on function public.create_living_order_reservation(text,text,text,jsonb,jsonb,text,uuid,jsonb)
   to service_role;
