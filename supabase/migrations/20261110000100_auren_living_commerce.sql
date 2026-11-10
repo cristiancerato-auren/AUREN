@@ -275,13 +275,13 @@ begin
     unit_price,line_total,variant_name,variant_options
   )
   select v_order_id,
-    (x->>'product_id')::uuid,
-    nullif(x->>'variant_id','')::uuid,
-    x->>'product_name',x->>'sku',x->>'brand_type',
-    (x->>'quantity')::integer,(x->>'unit_price')::numeric,
-    (x->>'line_total')::numeric,x->>'variant_name',
-    coalesce(x->'variant_options','{}'::jsonb)
-  from jsonb_array_elements(v_items) as x;
+    (x.value->>'product_id')::uuid,
+    nullif(x.value->>'variant_id','')::uuid,
+    x.value->>'product_name',x.value->>'sku',x.value->>'brand_type',
+    (x.value->>'quantity')::integer,(x.value->>'unit_price')::numeric,
+    (x.value->>'line_total')::numeric,x.value->>'variant_name',
+    coalesce(x.value->'variant_options','{}'::jsonb)
+  from jsonb_array_elements(v_items) as x(value);
 
   return jsonb_build_object(
     'order_id',v_order_id,'order_number',v_order_number,
