@@ -3,6 +3,14 @@ import vm from "node:vm";
 import assert from "node:assert/strict";
 
 const read = (path) => fs.readFileSync(new URL(path, import.meta.url), "utf8");
+const manifest = JSON.parse(read("../manifest.webmanifest"));
+const serviceWorker = read("../service-worker.js");
+new vm.Script(serviceWorker, {filename:"service-worker.js"});
+assert.equal(manifest.start_url, "/");
+assert.equal(manifest.scope, "/");
+assert.equal(manifest.display, "standalone");
+assert.match(serviceWorker, /OFFLINE_URL/);
+console.log("PWA manifest and service worker checks passed");
 const files = {
   index: read("../index.html"),
   account: read("../account.html"),
@@ -34,6 +42,8 @@ console.log("✓ Live Supabase integration JavaScript syntax");
 
 assert.match(files.index, /href=["']account\.html["']/i);
 assert.match(files.index, /assets\/js\/auren-live\.js/);
+assert.ok(files.index.includes("rel=\"manifest\""));
+assert.ok(files.index.includes("serviceWorker.register"));
 assert.match(files.live, /from\('properties'\)/);
 assert.match(files.live, /from\('service_requests'\)/);
 assert.match(files.live, /from\('newsletter_subscribers'\)/);
