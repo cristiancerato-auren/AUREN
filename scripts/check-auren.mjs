@@ -9,6 +9,8 @@ new vm.Script(serviceWorker, {filename:"service-worker.js"});
 assert.equal(manifest.start_url, "/");
 assert.equal(manifest.scope, "/");
 assert.equal(manifest.display, "standalone");
+assert.deepEqual(manifest.shortcuts.map((item) => item.short_name), ["Properties", "Living", "Studio", "Journal"]);
+for (const shortcut of manifest.shortcuts) assert.ok(shortcut.url.startsWith("/"), "App shortcuts must stay within AUREN");
 assert.match(serviceWorker, /OFFLINE_URL/);
 console.log("PWA manifest and service worker checks passed");
 const files = {
