@@ -51,6 +51,9 @@ assert.match(files.privacy, /BOZZA DA COMPLETARE E VALIDARE/, "Privacy draft mus
 assert.match(files.terms, /BOZZA NON VALIDA PER LA VENDITA/, "Sale terms draft must remain clearly marked until completed");
 assert.match(files.adminLiving, /living_orders/);
 assert.match(files.adminLiving, /customer_email/);
+const checkoutSource = read("../supabase/functions/create-living-checkout/index.ts");
+assert.match(checkoutSource, /requiredAddressFields = \["line1", "postal_code", "city", "province", "country"\]/, "Checkout address validation must match the storefront payload");
+assert.match(checkoutSource, /raw\.length > 64_000/, "Checkout request body must be size-limited");
 assert.doesNotMatch(files.living, /from\(['"]living_orders['"]\)\.insert/i, "Client must not create unpaid orders");
 for (const [name, content] of Object.entries(files)) {
   assert.doesNotMatch(content, /service_role|SUPABASE_SECRET_KEY|sb_secret_/i, "Secret key detected in " + name);
