@@ -28,7 +28,7 @@ Deno.serve(async (req) => {
 
   const userClient = createClient(url, anonKey, { auth: { persistSession: false, autoRefreshToken: false } });
   const { data: userData, error: authError } = await userClient.auth.getUser(token);
-  if (authError || !userData.user) return new Response("Unauthorized", { status: 401 });
+  if (authError || !userData.user) return respond("Unauthorized", 401);
 
   const admin = createClient(url, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
   const { data: profile, error: profileError } = await admin.from("profiles")
