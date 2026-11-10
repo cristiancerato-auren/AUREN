@@ -70,6 +70,8 @@ assert.match(emailSource, /shipped_email_sent_at/);
 assert.match(webhookSource, /sendLivingOrderEmail\(supabase, orderId, "paid"\)/, "Paid webhook must send order confirmation");
 assert.match(shipmentSource, /account_type/);
 assert.match(shipmentSource, /account_type !== "admin"/, "Shipment emails must be admin-only");
+assert.match(shipmentSource, /Access-Control-Allow-Origin/, "Shipment email function must support the storefront origin");
+assert.match(shipmentSource, /req.method === "OPTIONS"/, "Shipment email function must answer browser preflight requests");
 assert.match(files.adminLiving, /functions\.invoke\('send-living-order-email'/, "Admin shipment update must trigger the email function");
 const checkoutSource = read("../supabase/functions/create-living-checkout/index.ts");
 assert.match(checkoutSource, /requiredAddressFields = \["line1", "postal_code", "city", "province", "country"\]/, "Checkout address validation must match the storefront payload");
