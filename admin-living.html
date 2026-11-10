@@ -46,6 +46,7 @@
  const $=id=>document.getElementById(id);const status=m=>$('status').textContent=m;
  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const val=id=>$(id).value.trim();
+ const safeImageUrls=raw=>{const lines=raw.split('\\n').map(x=>x.trim()).filter(Boolean);const urls=[];for(const line of lines){let u;try{u=new URL(line)}catch{throw new Error('Ogni immagine deve avere un URL completo.')}if(!['https:','http:'].includes(u.protocol)||u.username||u.password)throw new Error('Sono consentiti solo URL HTTP o HTTPS.');urls.push(u.href)}return urls;};
  $('logout').onclick=async()=>{await db.auth.signOut();location.href='account.html'};
  $('reset').onclick=resetForm;
  function resetForm(){ $('productForm').reset();$('productId').value='';$('stock').value='0';$('formTitle').textContent='Aggiungi prodotto';}
@@ -72,7 +73,7 @@
   if(!Number.isFinite(price)||price<0||!Number.isInteger(stock)||stock<0||(compare!==null&&(!Number.isFinite(compare)||compare<price))){status('Controlla prezzo, prezzo precedente e quantità.');return}
   const payload={name:val('name'),sku:val('sku')||null,slug:val('slug').toLowerCase(),brand_type:val('brandType'),brand_name:val('brandName')||null,category:val('category')||null,description:val('description')||null,price,compare_at_price:compare,stock_quantity:stock,images:val('images').split('\n').map(x=>x.trim()).filter(Boolean),active:$('active').checked,featured:$('featured').checked,updated_at:new Date().toISOString()};
   const id=val('productId');const q=id?db.from('living_products').update(payload).eq('id',id):db.from('living_products').insert(payload);
-  const {error}=await q;if(error){status('Salvataggio non riuscito. Controlla che slug e SKU siano univoci.');console.error(error)}else{status('Prodotto salvato.');resetForm();loadProducts()}
+  const {error}=await q;if(error){status('Salvataggio non riuscito. Controlla i campi e che slug e SKU siano univoci.');console.error(error)}else{status('Prodotto salvato.');resetForm();loadProducts()}
  };
  async function loadOrders(){
   const root=$('orders');const {data,error}=await db.from('living_orders').select('id,order_number,customer_name,email,total,payment_status,fulfillment_status,tracking_code,created_at').order('created_at',{ascending:false}).limit(100);
