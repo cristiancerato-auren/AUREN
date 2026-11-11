@@ -9,9 +9,11 @@ new vm.Script(serviceWorker, {filename:"service-worker.js"});
 assert.equal(manifest.start_url, "/");
 assert.equal(manifest.scope, "/");
 assert.equal(manifest.display, "standalone");
+assert.ok(manifest.icons.some((icon) => icon.purpose === "maskable" && icon.src.endsWith("auren-app-maskable.svg")), "PWA must provide a dedicated maskable icon");
 assert.deepEqual(manifest.shortcuts.map((item) => item.short_name), ["Properties", "Living", "Studio", "Journal"]);
 for (const shortcut of manifest.shortcuts) assert.ok(shortcut.url.startsWith("/"), "App shortcuts must stay within AUREN");
 assert.match(serviceWorker, /OFFLINE_URL/);
+assert.ok(serviceWorker.includes("/assets/icons/auren-app-maskable.svg"), "Maskable app icon must be precached for offline install metadata");
 console.log("PWA manifest and service worker checks passed");
 const files = {
   index: read("../index.html"),
