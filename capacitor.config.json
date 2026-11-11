@@ -1,0 +1,13 @@
+{
+  "appId": "it.aurenliving.app",
+  "appName": "AUREN",
+  "webDir": "www",
+  "backgroundColor": "#F4EEE5",
+  "ios": {
+    "contentInset": "automatic",
+    "backgroundColor": "#F4EEE5"
+  },
+  "android": {
+    "backgroundColor": "#F4EEE5"
+  }
+}
