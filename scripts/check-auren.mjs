@@ -81,6 +81,15 @@ assert.match(commerceMigration, /set search_path = pg_catalog, public, pg_temp/,
 assert.match(commerceMigration, /enforce_living_order_paid_before_shipment/, "Database must reject shipment of unpaid orders");
 assert.match(commerceMigration, /before update of fulfillment_status on public\.living_orders/, "Shipment guard must be enforced by a database trigger");
 assert.match(commerceMigration, /revoke all on function public\.enforce_living_order_paid_before_shipment\(\) from public, anon, authenticated/i, "Trigger helper must not be exposed as a callable RPC");
+assert.match(commerceMigration, /revoke all on function public\.create_living_order_reservation\(text,text,text,jsonb,jsonb,text,numeric,uuid,jsonb\)\s+from public, anon, authenticated/i, "Order reservation SECURITY DEFINER function must not be callable by browser roles");
+assert.match(commerceMigration, /grant execute on function public\.create_living_order_reservation\(text,text,text,jsonb,jsonb,text,numeric,uuid,jsonb\)\s+to service_role/i, "Only the trusted service role may create stock reservations");
+assert.match(commerceMigration, /revoke all on function public\.release_living_order_reservation\(uuid\)\s+from public, anon, authenticated/i, "Stock release SECURITY DEFINER function must not be callable by browser roles");
+assert.match(commerceMigration, /grant execute on function public\.release_living_order_reservation\(uuid\)\s+to service_role/i, "Only the trusted service role may release stock reservations");
+assert.match(webhookSource, /session\.mode !== "payment"/, "Webhook must reject non-payment Checkout sessions");
+assert.match(webhookSource, /session\.currency !== "eur"/, "Webhook must reject non-EUR payments");
+assert.match(webhookSource, /Number\(session\.amount_total\) !== Math\.round\(Number\(pendingOrder\.total\) \* 100\)/, "Webhook must verify the exact paid amount against the order");
+assert.match(webhookSource, /\.eq\("payment_status", "pending"\)/, "Webhook must only transition pending orders to paid");
+assert.match(webhookSource, /order\.payment_status === "pending"/, "Expired Checkout sessions must only release still-pending orders");
 assert.match(webhookSource, /sendLivingOrderEmail\(supabase, orderId, "paid"\)/, "Paid webhook must send order confirmation");
 assert.match(webhookSource, /rawBody\.length > 256_000/, "Stripe webhook payload must be size-limited");
 assert.match(webhookSource, /handledEvents\.has\(event\.type\)/, "Unrelated Stripe events must be acknowledged without order metadata");
