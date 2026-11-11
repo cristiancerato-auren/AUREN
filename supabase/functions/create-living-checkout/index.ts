@@ -161,8 +161,14 @@ Deno.serve(async (req) => {
     checkoutUrl = typeof session.url === "string" ? new URL(session.url) : null;
   } catch { /* Invalid provider URL is rejected below. */ }
   if (!stripeResponse.ok || !checkoutUrl || checkoutUrl.protocol !== "https:" ||
-      checkoutUrl.hostname !== "checkout.stripe.com" || typeof session.id !== "string") {
-    console.error("Stripe session creation failed", session);
+      checkoutUrl.hostname !== "checkout.stripe.com" ||
+      typeof session.id !== "string" || !session.id.startsWith("cs_")) {
+    // Never log the full provider payload: it may contain customer or checkout data.
+    console.error("Stripe session creation failed", {
+      status: stripeResponse.status,
+      errorType: typeof session.error?.type === "string" ? session.error.type : undefined,
+      errorCode: typeof session.error?.code === "string" ? session.error.code : undefined,
+    });
     await supabase.rpc("release_living_order_reservation", { p_order_id: reservation.order_id });
     return json({ error: "Impossibile avviare il pagamento. Riprova." }, 502);
   }
