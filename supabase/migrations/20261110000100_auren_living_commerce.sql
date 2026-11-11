@@ -201,10 +201,12 @@ begin
   if coalesce(length(trim(p_customer_name)),0) = 0
      or coalesce(length(trim(p_customer_email)),0) = 0
      or p_shipping_address is null
-     or jsonb_typeof(p_shipping_address) <> 'object'
+     or jsonb_typeof(p_shipping_address) is distinct from 'object'
      or p_shipping_total is null or p_shipping_total < 0
      or p_checkout_attempt_id is null
-     or p_request_hash is null or p_request_hash !~ '^[0-9a-f]{64}
+     or p_request_hash is null or p_request_hash !~ '^[0-9a-f]{64}$'
+     or p_items is null
+     or jsonb_typeof(p_items) is distinct from 'array'
      or case when jsonb_typeof(p_items) = 'array' then jsonb_array_length(p_items) else 0 end = 0
      or case when jsonb_typeof(p_items) = 'array' then jsonb_array_length(p_items) else 0 end > 50 then
     raise exception 'Dati ordine non validi';
@@ -512,9 +514,9 @@ revoke all on function public.enforce_living_order_paid_before_shipment() from p
 end;
 $$;
 
-revoke all on function public.create_living_order_reservation(text,text,text,jsonb,jsonb,text,numeric,uuid,jsonb)
+revoke all on function public.create_living_order_reservation(text,text,text,jsonb,jsonb,text,numeric,uuid,jsonb,uuid,text)
   from public, anon, authenticated;
-grant execute on function public.create_living_order_reservation(text,text,text,jsonb,jsonb,text,numeric,uuid,jsonb)
+grant execute on function public.create_living_order_reservation(text,text,text,jsonb,jsonb,text,numeric,uuid,jsonb,uuid,text)
   to service_role;
 
 
