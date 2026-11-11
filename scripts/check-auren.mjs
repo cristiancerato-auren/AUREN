@@ -105,6 +105,8 @@ assert.match(checkoutSource, /requiredAddressFields = \["line1", "postal_code", 
 assert.match(checkoutSource, /new URL\(requestOrigin\)\.origin !== new URL\(allowedOrigin\)\.origin/, "Checkout must reject cross-origin browser requests");
 assert.match(checkoutSource, /raw\.length > 64_000/, "Checkout request body must be size-limited");
 assert.match(checkoutSource, /checkoutUrl\.hostname !== "checkout\.stripe\.com"/, "Checkout must redirect only to Stripe's HTTPS checkout host");
+assert.match(checkoutSource, /session\.id\.startsWith\("cs_"\)/, "Checkout must validate Stripe Checkout session identifiers");
+assert.match(checkoutSource, /Never log the full provider payload/, "Checkout must not log full Stripe payloads that may contain customer data");
 assert.match(checkoutSource, /!linkedOrder/, "Checkout must fail closed if the Stripe session cannot be linked to its pending order");
 assert.match(checkoutSource, /Never release reserved stock unless Stripe confirms that the Checkout/, "Checkout must not release stock while a Stripe session may still be payable");
 assert.match(checkoutSource, /Stripe session request failed/, "Checkout must handle provider/network failures");
