@@ -6,7 +6,7 @@ const root = path.join(process.cwd(), "www");
 const required = [
   "index.html", "living.html", "studio.html", "journal.html",
   "account.html", "privacy.html", "terms.html", "offline.html",
-  "manifest.webmanifest", "assets/js/auren-storage.js",
+  "manifest.webmanifest", "service-worker.js", "assets/js/auren-storage.js",
   "assets/js/auren-live.js", "assets/icons/auren-app.svg",
   "assets/icons/auren-app-maskable.svg"
 ];
