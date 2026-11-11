@@ -8,7 +8,8 @@ const APP_ASSETS = [
   "/journal.html",
   "/account.html",
   "/manifest.webmanifest",
-  "/assets/icons/auren-app.svg"
+  "/assets/icons/auren-app.svg",
+  "/assets/icons/auren-app-maskable.svg"
 ];
 
 self.addEventListener("install", (event) => {
