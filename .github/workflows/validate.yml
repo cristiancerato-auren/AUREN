@@ -20,6 +20,8 @@ jobs:
           node-version: 22
       - name: Validate production pages and scripts
         run: node scripts/check-auren.mjs
+      - name: Build and validate native mobile web bundle
+        run: npm run build:mobile && npm run check:mobile
       - name: Set up Deno for Supabase Edge Functions
         uses: denoland/setup-deno@v2
         with:
