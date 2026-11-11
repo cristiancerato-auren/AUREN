@@ -104,7 +104,8 @@ const checkoutSource = read("../supabase/functions/create-living-checkout/index.
 assert.match(checkoutSource, /requiredAddressFields = \["line1", "postal_code", "city", "province", "country"\]/, "Checkout address validation must match the storefront payload");
 assert.match(checkoutSource, /new URL\(requestOrigin\)\.origin !== new URL\(allowedOrigin\)\.origin/, "Checkout must reject cross-origin browser requests");
 assert.match(checkoutSource, /raw\.length > 64_000/, "Checkout request body must be size-limited");
-assert.match(commerceMigration, /checkout_attempt_id uuid unique/i, "Checkout attempt IDs must be unique per order");
+assert.match(commerceMigration, /add column if not exists checkout_attempt_id uuid/i, "Checkout attempt IDs must be stored on orders");
+assert.match(commerceMigration, /living_orders_checkout_attempt_uidx[\s\S]*?on public\.living_orders\(checkout_attempt_id\)/i, "Checkout attempt IDs must have a unique database constraint");
 assert.match(commerceMigration, /pg_advisory_xact_lock\(hashtextextended\(p_checkout_attempt_id::text, 0\)\)/, "Concurrent retries must serialize on the same checkout attempt");
 assert.match(commerceMigration, /checkout_request_hash is distinct from p_request_hash/i, "A retry key must not be reusable with changed order details");
 assert.match(commerceMigration, /create_living_order_reservation\(text,text,text,jsonb,jsonb,text,numeric,uuid,jsonb,uuid,text\)/i, "Reservation RPC must accept a stable checkout attempt ID and request fingerprint");
