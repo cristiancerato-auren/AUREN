@@ -119,7 +119,7 @@ assert.match(checkoutSource, /session\.id\.startsWith\("cs_"\)/, "Checkout must 
 assert.match(checkoutSource, /Never log the full provider payload/, "Checkout must not log full Stripe payloads that may contain customer data");
 assert.match(checkoutSource, /!linkedOrder/, "Checkout must fail closed if the Stripe session cannot be linked to its pending order");
 assert.match(checkoutSource, /Never release reserved stock unless Stripe confirms that the Checkout/, "Checkout must not release stock while a Stripe session may still be payable");
-assert.match(checkoutSource, /Stripe session request failed/, "Checkout must handle provider/network failures");
+assert.match(checkoutSource, /Stripe session request outcome is unknown/, "Checkout must handle provider/network failures");
 assert.match(checkoutSource, /release_living_order_reservation.*reservation\.order_id/, "Checkout must release reserved stock when Stripe cannot create a session");
 assert.doesNotMatch(files.living, /from\(['"]living_orders['"]\)\.insert/i, "Client must not create unpaid orders");
 for (const [name, content] of Object.entries(files)) {
