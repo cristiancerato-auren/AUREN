@@ -164,10 +164,12 @@ Deno.serve(async (req) => {
       checkoutUrl.hostname !== "checkout.stripe.com" ||
       typeof session.id !== "string" || !session.id.startsWith("cs_")) {
     // Never log the full provider payload: it may contain customer or checkout data.
+    const stripeError = session.error && typeof session.error === "object"
+      ? session.error as Record<string, unknown> : {};
     console.error("Stripe session creation failed", {
       status: stripeResponse.status,
-      errorType: typeof session.error?.type === "string" ? session.error.type : undefined,
-      errorCode: typeof session.error?.code === "string" ? session.error.code : undefined,
+      errorType: typeof stripeError.type === "string" ? stripeError.type : undefined,
+      errorCode: typeof stripeError.code === "string" ? stripeError.code : undefined,
     });
     await supabase.rpc("release_living_order_reservation", { p_order_id: reservation.order_id });
     return json({ error: "Impossibile avviare il pagamento. Riprova." }, 502);
