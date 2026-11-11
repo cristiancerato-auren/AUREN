@@ -181,9 +181,13 @@ Deno.serve(async (req) => {
     }
     session = payload as Record<string, unknown>;
   } catch (error) {
-    console.error("Stripe session request failed", error);
-    await supabase.rpc("release_living_order_reservation", { p_order_id: reservation.order_id });
-    return json({ error: "Impossibile avviare il pagamento. Riprova." }, 502);
+    // The request may have reached Stripe even if the response was lost.
+    // Keep stock reserved; a retry with the same idempotency key recovers the same session.
+    console.error("Stripe session request outcome is unknown; reservation retained for safe retry", {
+      orderId: reservation.order_id,
+      checkoutAttemptId,
+    });
+    return json({ error: "Esito del pagamento non verificabile. Riprova tra qualche secondo senza modificare il carrello." }, 502);
   }
   let checkoutUrl: URL | null = null;
   try {
@@ -200,7 +204,11 @@ Deno.serve(async (req) => {
       errorType: typeof stripeError.type === "string" ? stripeError.type : undefined,
       errorCode: typeof stripeError.code === "string" ? stripeError.code : undefined,
     });
-    await supabase.rpc("release_living_order_reservation", { p_order_id: reservation.order_id });
+    // A definitive Stripe 4xx means no Checkout Session was created. A 5xx or
+    // malformed success response is ambiguous, so stock must remain reserved.
+    if (stripeResponse.status >= 400 && stripeResponse.status < 500) {
+      await supabase.rpc("release_living_order_reservation", { p_order_id: reservation.order_id });
+    }
     return json({ error: "Impossibile avviare il pagamento. Riprova." }, 502);
   }
 
