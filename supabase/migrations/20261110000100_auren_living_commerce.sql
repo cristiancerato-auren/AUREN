@@ -162,7 +162,12 @@ with check (exists (select 1 from public.profiles p where p.id = auth.uid() and 
 
 -- Checkout reservations are created only by the trusted server-side function.
 alter table public.living_orders
-  add column if not exists reservation_expires_at timestamptz;
+  add column if not exists reservation_expires_at timestamptz,
+  add column if not exists checkout_attempt_id uuid,
+  add column if not exists checkout_request_hash text;
+create unique index if not exists living_orders_checkout_attempt_uidx
+  on public.living_orders(checkout_attempt_id)
+  where checkout_attempt_id is not null;
 
 create or replace function public.create_living_order_reservation(
   p_customer_name text,
