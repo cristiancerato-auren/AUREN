@@ -139,9 +139,11 @@ Deno.serve(async (req) => {
   form.set("mode", "payment");
   // Stripe Checkout permits an expiry from 30 minutes to 24 hours.
   const reservationExpiry = Math.floor(new Date(String(reservation.reservation_expires_at)).getTime() / 1000);
-  if (!Number.isSafeInteger(reservationExpiry) || reservationExpiry < Math.floor(Date.now() / 1000) + 30 * 60) {
-    return json({ error: "Tentativo di pagamento scaduto. Riprova dal carrello." }, 409);
+  if (!Number.isSafeInteger(reservationExpiry)) {
+    console.error("Reservation has an invalid expiry timestamp", { orderId: reservation.order_id });
+    return json({ error: "Prenotazione non valida. Contatta l'assistenza." }, 500);
   }
+  // Keep this value stable for Stripe's idempotency cache on every retry.
   form.set("expires_at", String(reservationExpiry));
   form.set("success_url", siteUrl + "/living.html?checkout=success&session_id={CHECKOUT_SESSION_ID}");
   form.set("cancel_url", siteUrl + "/living.html?checkout=cancelled");
