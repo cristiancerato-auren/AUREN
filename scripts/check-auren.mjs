@@ -81,8 +81,8 @@ assert.match(commerceMigration, /set search_path = pg_catalog, public, pg_temp/,
 assert.match(commerceMigration, /enforce_living_order_paid_before_shipment/, "Database must reject shipment of unpaid orders");
 assert.match(commerceMigration, /before update of fulfillment_status on public\.living_orders/, "Shipment guard must be enforced by a database trigger");
 assert.match(commerceMigration, /revoke all on function public\.enforce_living_order_paid_before_shipment\(\) from public, anon, authenticated/i, "Trigger helper must not be exposed as a callable RPC");
-assert.match(commerceMigration, /revoke all on function public\.create_living_order_reservation\(text,text,text,jsonb,jsonb,text,numeric,uuid,jsonb\)\s+from public, anon, authenticated/i, "Order reservation SECURITY DEFINER function must not be callable by browser roles");
-assert.match(commerceMigration, /grant execute on function public\.create_living_order_reservation\(text,text,text,jsonb,jsonb,text,numeric,uuid,jsonb\)\s+to service_role/i, "Only the trusted service role may create stock reservations");
+assert.match(commerceMigration, /revoke all on function public\.create_living_order_reservation\(text,text,text,jsonb,jsonb,text,numeric,uuid,jsonb,uuid,text\)\s+from public, anon, authenticated/i, "Order reservation SECURITY DEFINER function must not be callable by browser roles");
+assert.match(commerceMigration, /grant execute on function public\.create_living_order_reservation\(text,text,text,jsonb,jsonb,text,numeric,uuid,jsonb,uuid,text\)\s+to service_role/i, "Only the trusted service role may create stock reservations");
 assert.match(commerceMigration, /revoke all on function public\.release_living_order_reservation\(uuid\)\s+from public, anon, authenticated/i, "Stock release SECURITY DEFINER function must not be callable by browser roles");
 assert.match(commerceMigration, /grant execute on function public\.release_living_order_reservation\(uuid\)\s+to service_role/i, "Only the trusted service role may release stock reservations");
 assert.match(webhookSource, /session\.mode !== "payment"/, "Webhook must reject non-payment Checkout sessions");
