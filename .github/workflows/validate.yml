@@ -20,8 +20,10 @@ jobs:
           node-version: 22
       - name: Validate production pages and scripts
         run: node scripts/check-auren.mjs
-      - name: Build and validate native mobile web bundle
-        run: npm run build:mobile && npm run check:mobile
+      - name: Install Capacitor toolchain
+        run: npm install --ignore-scripts
+      - name: Verify Capacitor CLI and build native mobile web bundle
+        run: npx cap --version && npm run build:mobile && npm run check:mobile
       - name: Set up Deno for Supabase Edge Functions
         uses: denoland/setup-deno@v2
         with:
