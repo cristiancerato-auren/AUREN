@@ -59,6 +59,7 @@ Deno.serve(async (req) => {
   const billingAddress = body.billing_address ?? null;
   const customerNote = typeof body.customer_note === "string" ? body.customer_note.trim() : "";
   const items = body.items;
+  const checkoutAttemptId = typeof body.checkout_attempt_id === "string" ? body.checkout_attempt_id : "";
   const address = shippingAddress && typeof shippingAddress === "object" && !Array.isArray(shippingAddress)
     ? shippingAddress as Record<string, unknown> : null;
   const requiredAddressFields = ["line1", "postal_code", "city", "province", "country"];
@@ -69,6 +70,7 @@ Deno.serve(async (req) => {
   if (!customerName || customerName.length > 160 ||
       customerEmail.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail) ||
       phone.length > 40 || customerNote.length > 1000 || !addressValid ||
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(checkoutAttemptId) ||
       !Array.isArray(items) || items.length < 1 || items.length > 50) {
     return json({ error: "Controlla i dati del cliente, la spedizione e i prodotti" }, 400);
   }
@@ -91,6 +93,27 @@ Deno.serve(async (req) => {
     variant_id: item?.variant_id ?? null,
     quantity: item?.quantity,
   }));
+  const fingerprintPayload = {
+    customer_name: customerName,
+    customer_email: customerEmail,
+    phone: phone || null,
+    shipping_address: shippingAddress,
+    billing_address: billingAddress,
+    customer_note: customerNote,
+    shipping_cents: shippingCents,
+    user_id: userId,
+    items: safeItems.map((item) => ({
+      product_id: item.product_id,
+      variant_id: item.variant_id ?? null,
+      quantity: item.quantity,
+    })).sort((a, b) => String(a.product_id).localeCompare(String(b.product_id)) ||
+      String(a.variant_id ?? "").localeCompare(String(b.variant_id ?? ""))),
+  };
+  const fingerprintBytes = new TextEncoder().encode(JSON.stringify(fingerprintPayload));
+  const fingerprintDigest = await crypto.subtle.digest("SHA-256", fingerprintBytes);
+  const requestHash = Array.from(new Uint8Array(fingerprintDigest))
+    .map((byte) => byte.toString(16).padStart(2, "0")).join("");
+
   const { data: reservation, error: reserveError } = await supabase.rpc(
     "create_living_order_reservation",
     {
@@ -103,6 +126,8 @@ Deno.serve(async (req) => {
       p_shipping_total: shippingTotal,
       p_user_id: userId,
       p_items: safeItems,
+      p_checkout_attempt_id: checkoutAttemptId,
+      p_request_hash: requestHash,
     },
   );
   if (reserveError || !reservation?.order_id || !Array.isArray(reservation.items)) {
@@ -113,7 +138,11 @@ Deno.serve(async (req) => {
   const form = new URLSearchParams();
   form.set("mode", "payment");
   // Stripe Checkout permits an expiry from 30 minutes to 24 hours.
-  form.set("expires_at", String(Math.floor(Date.now() / 1000) + 31 * 60));
+  const reservationExpiry = Math.floor(new Date(String(reservation.reservation_expires_at)).getTime() / 1000);
+  if (!Number.isSafeInteger(reservationExpiry) || reservationExpiry < Math.floor(Date.now() / 1000) + 30 * 60) {
+    return json({ error: "Tentativo di pagamento scaduto. Riprova dal carrello." }, 409);
+  }
+  form.set("expires_at", String(reservationExpiry));
   form.set("success_url", siteUrl + "/living.html?checkout=success&session_id={CHECKOUT_SESSION_ID}");
   form.set("cancel_url", siteUrl + "/living.html?checkout=cancelled");
   form.set("customer_email", customerEmail);
@@ -142,7 +171,7 @@ Deno.serve(async (req) => {
       headers: {
         "Authorization": "Bearer " + stripeKey,
         "Content-Type": "application/x-www-form-urlencoded",
-        "Idempotency-Key": crypto.randomUUID(),
+        "Idempotency-Key": "auren-living-checkout-" + checkoutAttemptId,
       },
       body: form,
     });
