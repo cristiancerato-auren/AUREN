@@ -1,0 +1,66 @@
+name: Build AUREN native projects
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - app/pwa-foundation
+    paths:
+      - "package.json"
+      - "capacitor.config.json"
+      - "scripts/build-mobile.mjs"
+      - ".github/workflows/native-projects.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout development branch
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Build AUREN web assets
+        run: npm run build:mobile && npm run check:mobile
+
+      - name: Generate Android project
+        run: npx cap add android
+
+      - name: Generate iOS project
+        run: npx cap add ios
+
+      - name: Sync web assets to native projects
+        run: npx cap sync
+
+      - name: Verify native project structure
+        run: |
+          test -f android/settings.gradle || test -f android/settings.gradle.kts
+          test -f android/app/build.gradle || test -f android/app/build.gradle.kts
+          test -f ios/App/App.xcodeproj/project.pbxproj
+          test -f ios/App/App/Info.plist
+          echo "Android and iOS project scaffolds generated."
+
+      - name: Upload native project sources
+        uses: actions/upload-artifact@v4
+        with:
+          name: auren-native-projects
+          path: |
+            android/
+            ios/
+            www/
+            capacitor.config.json
+            package.json
+            package-lock.json
+          if-no-files-found: error
+          retention-days: 14
