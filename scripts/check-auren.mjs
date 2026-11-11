@@ -104,6 +104,15 @@ const checkoutSource = read("../supabase/functions/create-living-checkout/index.
 assert.match(checkoutSource, /requiredAddressFields = \["line1", "postal_code", "city", "province", "country"\]/, "Checkout address validation must match the storefront payload");
 assert.match(checkoutSource, /new URL\(requestOrigin\)\.origin !== new URL\(allowedOrigin\)\.origin/, "Checkout must reject cross-origin browser requests");
 assert.match(checkoutSource, /raw\.length > 64_000/, "Checkout request body must be size-limited");
+assert.match(commerceMigration, /checkout_attempt_id uuid unique/i, "Checkout attempt IDs must be unique per order");
+assert.match(commerceMigration, /pg_advisory_xact_lock\(hashtextextended\(p_checkout_attempt_id::text, 0\)\)/, "Concurrent retries must serialize on the same checkout attempt");
+assert.match(commerceMigration, /checkout_request_hash is distinct from p_request_hash/i, "A retry key must not be reusable with changed order details");
+assert.match(commerceMigration, /create_living_order_reservation\(text,text,text,jsonb,jsonb,text,numeric,uuid,jsonb,uuid,text\)/i, "Reservation RPC must accept a stable checkout attempt ID and request fingerprint");
+assert.match(checkoutSource, /Idempotency-Key": "auren-living-checkout-" \+ checkoutAttemptId/, "Stripe requests must reuse the same idempotency key across retries");
+assert.match(checkoutSource, /p_checkout_attempt_id: checkoutAttemptId/, "Database reservation must use the browser checkout attempt ID");
+assert.match(checkoutSource, /p_request_hash: requestHash/, "Database reservation must bind retries to the same request payload");
+assert.match(checkoutSource, /outcome is unknown; reservation retained for safe retry/, "Ambiguous Stripe network outcomes must not release stock");
+assert.match(files.living, /aurenLivingCheckoutAttempt/, "Storefront must persist the checkout attempt ID across retry attempts");
 assert.match(checkoutSource, /checkoutUrl\.hostname !== "checkout\.stripe\.com"/, "Checkout must redirect only to Stripe's HTTPS checkout host");
 assert.match(checkoutSource, /session\.id\.startsWith\("cs_"\)/, "Checkout must validate Stripe Checkout session identifiers");
 assert.match(checkoutSource, /Never log the full provider payload/, "Checkout must not log full Stripe payloads that may contain customer data");
