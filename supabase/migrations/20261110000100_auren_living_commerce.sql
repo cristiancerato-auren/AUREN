@@ -380,3 +380,6 @@ drop trigger if exists living_orders_paid_before_shipment on public.living_order
 create trigger living_orders_paid_before_shipment
 before update of fulfillment_status on public.living_orders
 for each row execute function public.enforce_living_order_paid_before_shipment();
+
+-- Trigger functions are invoked by PostgreSQL; they are not public RPC endpoints.
+revoke all on function public.enforce_living_order_paid_before_shipment() from public, anon, authenticated;
