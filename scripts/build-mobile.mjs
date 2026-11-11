@@ -12,7 +12,8 @@ const pages = [
   "privacy.html",
   "terms.html",
   "offline.html",
-  "manifest.webmanifest"
+  "manifest.webmanifest",
+  "service-worker.js"
 ];
 
 fs.rmSync(output, { recursive: true, force: true });
