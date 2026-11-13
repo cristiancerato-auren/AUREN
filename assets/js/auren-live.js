@@ -261,7 +261,12 @@
       const article = button.closest('.service-card');
       if (article) {
         const priceEl = article.querySelector('.service-price');
-        if (priceEl) priceEl.innerHTML = '€ ' + Number(service.price).toLocaleString('it-IT') + ' <small>/ da</small>';
+        if (priceEl) {
+          priceEl.replaceChildren(document.createTextNode('€ ' + Number(service.price).toLocaleString('it-IT') + ' '));
+          const qualifier = document.createElement('small');
+          qualifier.textContent = '/ da';
+          priceEl.appendChild(qualifier);
+        }
       }
     });
   }
