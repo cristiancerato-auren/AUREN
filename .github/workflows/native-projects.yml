@@ -39,16 +39,25 @@ jobs:
       - name: Generate iOS project
         run: npx cap add ios
 
+      - name: Set up Java for Android build
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
       - name: Sync web assets to native projects
         run: npx cap sync
 
+      - name: Build Android debug APK
+        working-directory: android
+        run: ./gradlew --no-daemon assembleDebug
+
       - name: Verify native project structure
         run: |
-          test -f android/settings.gradle || test -f android/settings.gradle.kts
-          test -f android/app/build.gradle || test -f android/app/build.gradle.kts
+          test -f android/app/build/outputs/apk/debug/app-debug.apk
           test -f ios/App/App.xcodeproj/project.pbxproj
           test -f ios/App/App/Info.plist
-          echo "Android and iOS project scaffolds generated."
+          echo "Android debug APK built; iOS Xcode project scaffold generated."
 
       - name: Upload native project sources
         uses: actions/upload-artifact@v4
