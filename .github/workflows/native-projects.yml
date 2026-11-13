@@ -48,16 +48,17 @@ jobs:
       - name: Sync web assets to native projects
         run: npx cap sync
 
-      - name: Build Android debug APK
+      - name: Build Android debug and release APKs
         working-directory: android
-        run: ./gradlew --no-daemon assembleDebug
+        run: ./gradlew --no-daemon assembleDebug assembleRelease
 
       - name: Verify native project structure
         run: |
           test -f android/app/build/outputs/apk/debug/app-debug.apk
+          test -f android/app/build/outputs/apk/release/app-release-unsigned.apk
           test -f ios/App/App.xcodeproj/project.pbxproj
           test -f ios/App/App/Info.plist
-          echo "Android debug APK built; iOS Xcode project scaffold generated."
+          echo "Android debug and unsigned release APKs built; iOS Xcode project scaffold generated."
 
       - name: Upload native project sources
         uses: actions/upload-artifact@v4
@@ -106,11 +107,23 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             build
 
+      - name: Build unsigned iOS device archive
+        run: |
+          xcodebuild \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath build/ios-device/AUREN.xcarchive \
+            CODE_SIGNING_ALLOWED=NO \
+            archive
+
       - name: Verify iOS build output
         run: |
           test -d build/ios-derived/Build/Products/Debug-iphonesimulator/App.app
+          test -d build/ios-device/AUREN.xcarchive
           test -f ios/App/App.xcodeproj/project.pbxproj
-          echo "iOS Simulator app built successfully."
+          echo "iOS Simulator app and unsigned iOS device archive built successfully."
 
       - name: Upload iOS project and simulator app
         uses: actions/upload-artifact@v4
@@ -120,6 +133,7 @@ jobs:
             ios/
             www/
             build/ios-derived/Build/Products/Debug-iphonesimulator/App.app
+            build/ios-device/AUREN.xcarchive
             capacitor.config.json
             package.json
           if-no-files-found: error
