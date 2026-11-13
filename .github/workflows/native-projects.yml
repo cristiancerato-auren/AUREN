@@ -72,3 +72,55 @@ jobs:
             package-lock.json
           if-no-files-found: error
           retention-days: 14
+
+  build-ios:
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - name: Checkout development branch
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Build AUREN web assets
+        run: npm run build:mobile && npm run check:mobile
+
+      - name: Generate and sync iOS project
+        run: npx cap add ios && npx cap sync ios
+
+      - name: Build iOS Simulator app
+        run: |
+          xcodebuild \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -sdk iphonesimulator \
+            -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build/ios-derived \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+
+      - name: Verify iOS build output
+        run: |
+          test -d build/ios-derived/Build/Products/Debug-iphonesimulator/App.app
+          test -f ios/App/App.xcodeproj/project.pbxproj
+          echo "iOS Simulator app built successfully."
+
+      - name: Upload iOS project and simulator app
+        uses: actions/upload-artifact@v4
+        with:
+          name: auren-ios-simulator-build
+          path: |
+            ios/
+            www/
+            build/ios-derived/Build/Products/Debug-iphonesimulator/App.app
+            capacitor.config.json
+            package.json
+          if-no-files-found: error
+          retention-days: 14
