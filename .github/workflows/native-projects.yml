@@ -9,6 +9,11 @@ on:
       - "package.json"
       - "capacitor.config.json"
       - "scripts/build-mobile.mjs"
+      - "assets/**"
+      - "*.html"
+      - "manifest.webmanifest"
+      - "service-worker.js"
+      - "offline.html"
       - ".github/workflows/native-projects.yml"
 
 permissions:
