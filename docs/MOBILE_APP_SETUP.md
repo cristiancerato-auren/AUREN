@@ -41,6 +41,15 @@ npm run cap:open:ios
 npm run cap:open:android
 ```
 
+## CI build outputs
+
+The `Build AUREN native projects` workflow generates:
+- Android debug APK for local device testing.
+- Android unsigned release APK and Android App Bundle (`.aab`) for later signing and Play Console testing.
+- iOS Simulator app and an unsigned iOS device archive (`.xcarchive`) for later signing in Xcode.
+
+These unsigned release outputs are not store-submittable. Android distribution needs a release signing key; iOS distribution needs Apple signing certificates and provisioning. Never commit signing keys or passwords to the repository.
+
 ## Before any store submission
 
 Complete device testing for navigation, authentication redirects, deep links,
