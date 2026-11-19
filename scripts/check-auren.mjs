@@ -104,6 +104,8 @@ const checkoutSource = read("../supabase/functions/create-living-checkout/index.
 assert.match(checkoutSource, /requiredAddressFields = \["line1", "postal_code", "city", "province", "country"\]/, "Checkout address validation must match the storefront payload");
 assert.match(checkoutSource, /living_shipping_zones/, "Checkout must load shipping rates from the database");
 assert.match(checkoutSource, /countryZones\[countryName\]/, "Checkout must map the submitted country to a server-side shipping zone");
+assert.match(checkoutSource, /countryZones: Record<string, string> = Object\.create\(null\)/, "Country-zone lookup must not inherit unsafe object prototype keys");
+
 
 assert.match(checkoutSource, /addCountries\("america", \["Puerto Rico"/, "International territories in the Americas must map to the America zone");
 assert.match(checkoutSource, /addCountries\("asia_oceania", \["Palestina"/, "Palestine and Asian territories must map to Asia and Oceania");
