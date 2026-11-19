@@ -13,7 +13,7 @@ const json = (body: unknown, status = 200) =>
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 
-const normalizeCountry = (value: string) => value.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").trim().toLowerCase().replace(/[.']/g, "").replace(/\\s+/g, " ");
+const normalizeCountry = (value: string) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase().replace(/[.']/g, "").replace(/\s+/g, " ");
 const countryZones: Record<string, string> = {};
 const addCountries = (zone: string, names: string[]) => names.forEach((name) => countryZones[normalizeCountry(name)] = zone);
 addCountries("italia", ["Italia","Italy"]);
