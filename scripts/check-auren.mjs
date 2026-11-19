@@ -102,6 +102,14 @@ assert.match(shipmentSource, /raw\.length > 4_000/, "Shipment email endpoint mus
 assert.match(files.adminLiving, /functions\.invoke\('send-living-order-email'/, "Admin shipment update must trigger the email function");
 const checkoutSource = read("../supabase/functions/create-living-checkout/index.ts");
 assert.match(checkoutSource, /requiredAddressFields = \["line1", "postal_code", "city", "province", "country"\]/, "Checkout address validation must match the storefront payload");
+assert.match(checkoutSource, /living_shipping_zones/, "Checkout must load shipping rates from the database");
+assert.match(checkoutSource, /countryZones\\[countryName\\]/, "Checkout must map the submitted country to a server-side shipping zone");
+assert.doesNotMatch(checkoutSource, /SHIPPING_FLAT_RATE_CENTS/, "Checkout must not use a single global shipping rate");
+assert.match(checkoutSource, /shippingConfig\\?\\.active/, "Checkout must fail closed for inactive shipping zones");
+assert.match(files.adminLiving, /loadShippingZones/, "Admin must expose editable shipping tariffs");
+assert.match(files.adminLiving, /living_shipping_zones/, "Admin must persist shipping tariff changes in the database");
+assert.match(read("../supabase/migrations/20261119000100_auren_living_shipping_zones.sql"), /create table if not exists public\\.living_shipping_zones/i, "Shipping zone migration must create its configuration table");
+
 assert.match(checkoutSource, /new URL\(requestOrigin\)\.origin !== new URL\(allowedOrigin\)\.origin/, "Checkout must reject cross-origin browser requests");
 assert.match(checkoutSource, /raw\.length > 64_000/, "Checkout request body must be size-limited");
 assert.match(commerceMigration, /add column if not exists checkout_attempt_id uuid/i, "Checkout attempt IDs must be stored on orders");
