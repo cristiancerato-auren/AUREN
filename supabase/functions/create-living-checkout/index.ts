@@ -15,7 +15,7 @@ const json = (body: unknown, status = 200) =>
 
 const normalizeCountry = (value: string) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase().replace(/[.']/g, "").replace(/\s+/g, " ");
 const countryZones: Record<string, string> = Object.create(null);
-const addCountries = (zone: string, names: string[]) => names.forEach((name) => countryZones[normalizeCountry(name)] = zone);
+const addCountries = (zone: string, names: string[]) => names.forEach((name) => {\n  const key = normalizeCountry(name);\n  if (!countryZones[key]) countryZones[key] = zone;\n});
 addCountries("italia", ["Italia"]);
 addCountries("europa", ["Austria","Belgio","Bulgaria","Cipro","Croazia","Danimarca","Estonia","Finlandia","Francia","Germania","Grecia","Irlanda","Lettonia","Lituania","Lussemburgo","Malta","Paesi Bassi","Olanda","Polonia","Portogallo","Repubblica Ceca","Romania","Slovacchia","Slovenia","Spagna","Svezia","Ungheria","Austria","Albania","Andorra","Bosnia ed Erzegovina","Islanda","Kosovo","Liechtenstein","Moldavia","Monaco","Montenegro","Macedonia del Nord","Norvegia","San Marino","Serbia","Ucraina","Citta del Vaticano","Vaticano"]);
 addCountries("regno_unito_svizzera", ["Regno Unito","United Kingdom","UK","Gran Bretagna","Great Britain","Svizzera","Suisse"]);
