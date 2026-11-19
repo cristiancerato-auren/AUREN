@@ -105,6 +105,10 @@ assert.match(checkoutSource, /requiredAddressFields = \["line1", "postal_code", 
 assert.match(checkoutSource, /living_shipping_zones/, "Checkout must load shipping rates from the database");
 assert.match(checkoutSource, /countryZones\[countryName\]/, "Checkout must map the submitted country to a server-side shipping zone");
 assert.match(checkoutSource, /countryZones: Record<string, string> = Object\.create\(null\)/, "Country-zone lookup must not inherit unsafe object prototype keys");
+assert.match(checkoutSource, /if \(!countryZones\[key\]\) countryZones\[key\] = zone/, "Specific shipping zones must not be overwritten by later geographic aliases");
+assert.match(checkoutSource, /addCountries\("italia", \["Italia","Italy"\]\)/, "Italy must have its own shipping zone");
+assert.match(checkoutSource, /addCountries\("regno_unito_svizzera", \["Regno Unito","United Kingdom"/, "United Kingdom and Switzerland must retain their dedicated shipping zone");
+
 
 
 assert.match(checkoutSource, /addCountries\("america", \["Puerto Rico"/, "International territories in the Americas must map to the America zone");
