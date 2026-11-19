@@ -134,6 +134,9 @@ assert.match(checkoutSource, /p_checkout_attempt_id: checkoutAttemptId/, "Databa
 assert.match(checkoutSource, /p_request_hash: requestHash/, "Database reservation must bind retries to the same request payload");
 assert.match(checkoutSource, /outcome is unknown; reservation retained for safe retry/, "Ambiguous Stripe network outcomes must not release stock");
 assert.match(files.living, /aurenLivingCheckoutAttempt/, "Storefront must persist the checkout attempt ID across retry attempts");
+assert.match(files.living, /name="country"[^>]*list="countryOptions"/, "Worldwide checkout must offer country suggestions");
+assert.match(files.living, /<datalist id="countryOptions">/, "Checkout country suggestions must be available to customers");
+
 assert.match(checkoutSource, /checkoutUrl\.hostname !== "checkout\.stripe\.com"/, "Checkout must redirect only to Stripe's HTTPS checkout host");
 assert.match(checkoutSource, /session\.id\.startsWith\("cs_"\)/, "Checkout must validate Stripe Checkout session identifiers");
 assert.match(checkoutSource, /Never log the full provider payload/, "Checkout must not log full Stripe payloads that may contain customer data");
