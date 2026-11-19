@@ -11,6 +11,7 @@ Questo documento descrive ciò che deve essere completato prima di attivare gli 
 - [x] Struttura Stripe Checkout e webhook con verifica firma.
 - [x] Area cliente con cronologia ordini, protetta dalle policy RLS previste.
 - [x] Pannello admin per catalogo, varianti, ordini, filtri e aggiornamento tracking.
+- [x] Checkout internazionale con suggerimenti Paese e mappatura server-side delle sei zone; i Paesi non riconosciuti restano bloccati.
 - [x] Codice email transazionali per conferma pagamento e spedizione, con protezione da invii duplicati.
 - [ ] Configurazione Resend e collaudo reale delle email su ambiente di test.
 - [x] Bozze informative privacy e condizioni di vendita, marcate chiaramente come non definitive.
