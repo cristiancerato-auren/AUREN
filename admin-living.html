@@ -55,6 +55,11 @@
 </div>
 <div id="variants" class="muted">Seleziona un prodotto per visualizzarne le varianti.</div>
 </div>
+<div class="panel">
+<h2>Tariffe di spedizione</h2>
+<p class="muted">Imposta il prezzo in euro per ciascuna area. Una tariffa vuota o disattivata impedisce il checkout verso quell’area.</p>
+<div id="shippingZones"></div>
+</div>
 <div class="panel"><h2>Ordini ricevuti</h2><p class="muted">Dettagli cliente, articoli, indirizzo, pagamento, evasione e tracciamento.</p><div class="grid" style="margin-bottom:14px"><label class="field">Cerca ordine, cliente o email<input id="orderSearch" type="search" placeholder="Numero ordine, nome, email…"></label><label class="field">Filtra per evasione<select id="orderFilter"><option value="">Tutti gli stati</option><option value="unfulfilled">Da evadere</option><option value="processing">In preparazione</option><option value="shipped">Spediti</option><option value="delivered">Consegnati</option><option value="cancelled">Annullati</option></select></label><label class="field">Filtra per pagamento<select id="paymentFilter"><option value="">Tutti i pagamenti</option><option value="paid">Pagati</option><option value="pending">In attesa</option><option value="failed">Non riusciti</option><option value="refunded">Rimborsati</option><option value="partially_refunded">Parzialmente rimborsati</option></select></label></div><div id="orders"></div></div>
 </section>
 </main>
@@ -75,7 +80,7 @@
   const {data:p,error:e}=await db.from('profiles').select('account_type').eq('id',data.session.user.id).maybeSingle();
   if(e||p?.account_type!=='admin'){status('Accesso negato: account non amministratore.');return}
   $('app').classList.remove('hidden');status('Accesso amministratore verificato.');
-  await Promise.all([loadProducts(),loadOrders()]);
+  await Promise.all([loadProducts(),loadOrders(),loadShippingZones()]);
  }
  async function loadProducts(){
   const root=$('products');const {data,error}=await db.from('living_products').select('*').order('created_at',{ascending:false});
@@ -121,6 +126,15 @@
   const id=val('variantId'),q=id?db.from('living_product_variants').update(payload).eq('id',id):db.from('living_product_variants').insert(payload);
   const {error}=await q;if(error){status('Salvataggio variante non riuscito. Verifica SKU univoco e migrazione.');console.error(error)}else{status('Variante salvata.');resetVariantForm();loadVariants()}
  };
+
+ async function loadShippingZones(){
+  const root=$('shippingZones');
+  const {data,error}=await db.from('living_shipping_zones').select('zone_key,zone_name,rate_eur,active').order('sort_order');
+  if(error){root.textContent='Tariffe non disponibili: applicare la migrazione spedizioni sul database di test.';console.error(error);return}
+  const labels={italia:'Italia',europa:'Europa',regno_unito_svizzera:'Regno Unito e Svizzera',america:'America',asia_oceania:'Asia e Oceania',resto_mondo:'Resto del mondo'};
+  root.innerHTML=(data||[]).map(z=>'<div class="item"><div><h3>'+esc(labels[z.zone_key]||z.zone_name)+'</h3><small class="muted">Tariffa applicata al checkout</small></div><div class="actions"><input data-zone-rate="'+esc(z.zone_key)+'" type="number" min="0" max="1000" step="0.01" placeholder="€ non impostata" value="'+(z.rate_eur===null?'':Number(z.rate_eur))+'" style="width:145px;padding:8px;border:1px solid var(--line)"><label><input data-zone-active="'+esc(z.zone_key)+'" type="checkbox" '+(z.active?'checked':'')+'> Attiva</label><button data-zone-save="'+esc(z.zone_key)+'">Salva</button></div></div>').join('');
+  root.querySelectorAll('[data-zone-save]').forEach(b=>b.onclick=async()=>{const key=b.dataset.zoneSave;const raw=root.querySelector('[data-zone-rate="'+key+'"]').value;const active=root.querySelector('[data-zone-active="'+key+'"]').checked;const rate=raw===''?null:Number(raw);if(rate!==null&&(!Number.isFinite(rate)||rate<0||rate>1000)){status('Inserisci una tariffa tra 0 e 1.000 euro.');return}if(active&&rate===null){status('Inserisci una tariffa prima di attivare l’area.');return}const {error}=await db.from('living_shipping_zones').update({rate_eur:rate,active,updated_at:new Date().toISOString()}).eq('zone_key',key);if(error){status('Salvataggio tariffa non riuscito.');console.error(error)}else status('Tariffa '+(labels[key]||key)+' aggiornata.')});
+ }
  async function loadOrders(){
   const root=$('orders');
   const {data,error}=await db.from('living_orders').select('id,order_number,customer_name,customer_email,phone,shipping_address,customer_note,subtotal,shipping_total,total,currency,payment_status,fulfillment_status,tracking_code,tracking_url,created_at').order('created_at',{ascending:false}).limit(100);
