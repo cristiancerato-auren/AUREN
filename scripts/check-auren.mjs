@@ -122,6 +122,13 @@ assert.match(files.adminLiving, /loadShippingZones/, "Admin must expose editable
 assert.match(files.adminLiving, /living_shipping_zones/, "Admin must persist shipping tariff changes in the database");
 assert.match(read("../supabase/migrations/20261119000100_auren_living_shipping_zones.sql"), /create table if not exists public\.living_shipping_zones/i, "Shipping zone migration must create its configuration table");
 
+assert.match(commerceMigration, /grant select on public\.living_products, public\.living_product_variants to anon/i, "Public catalogue tables must have explicit Data API grants");
+assert.match(commerceMigration, /grant all on public\.living_products, public\.living_product_variants,[\s\S]*?to service_role/i, "Commerce tables must grant trusted server access explicitly");
+assert.match(commerceMigration, /alter table public\.living_orders enable row level security/i, "Customer order data must have RLS enabled");
+assert.match(read("../supabase/migrations/20261119000100_auren_living_shipping_zones.sql"), /grant select, update on public\.living_shipping_zones to authenticated/i, "Shipping configuration must have explicit admin Data API grants");
+assert.match(read("../supabase/migrations/20261119000100_auren_living_shipping_zones.sql"), /grant all on public\.living_shipping_zones to service_role/i, "Checkout service role must have explicit shipping configuration access");
+
+
 assert.match(checkoutSource, /new URL\(requestOrigin\)\.origin !== new URL\(allowedOrigin\)\.origin/, "Checkout must reject cross-origin browser requests");
 assert.match(checkoutSource, /raw\.length > 64_000/, "Checkout request body must be size-limited");
 assert.match(commerceMigration, /add column if not exists checkout_attempt_id uuid/i, "Checkout attempt IDs must be stored on orders");
