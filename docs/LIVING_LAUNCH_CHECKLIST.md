@@ -67,7 +67,7 @@ Segreti da impostare solo nell'ambiente server Supabase, mai nel browser o nel r
 - `SITE_URL`
 - `RESEND_API_KEY`
 - `LIVING_ORDER_EMAIL_FROM` — mittente su dominio verificato in Resend, ad esempio un indirizzo `@aurenliving.it`.
-- `SHIPPING_FLAT_RATE_CENTS`
+- Tabella `living_shipping_zones`: sei zone con tariffa EUR e stato attivo modificabili dall'amministratore.
 
 L'assenza della tariffa di spedizione deve mantenere il checkout disabilitato: non impostare un valore arbitrario per sbloccarlo.
 
