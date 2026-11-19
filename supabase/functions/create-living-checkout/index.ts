@@ -13,7 +13,16 @@ const json = (body: unknown, status = 200) =>
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 
-Deno.serve(async (req) => {
+const normalizeCountry = (value: string) => value.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").trim().toLowerCase().replace(/[.']/g, "").replace(/\\s+/g, " ");
+const countryZones: Record<string, string> = {};
+const addCountries = (zone: string, names: string[]) => names.forEach((name) => countryZones[normalizeCountry(name)] = zone);
+addCountries("italia", ["Italia","Italy"]);
+addCountries("europa", ["Austria","Belgio","Bulgaria","Cipro","Croazia","Danimarca","Estonia","Finlandia","Francia","Germania","Grecia","Irlanda","Lettonia","Lituania","Lussemburgo","Malta","Paesi Bassi","Olanda","Polonia","Portogallo","Repubblica Ceca","Romania","Slovacchia","Slovenia","Spagna","Svezia","Ungheria","Austria","Albania","Andorra","Bosnia ed Erzegovina","Islanda","Kosovo","Liechtenstein","Moldavia","Monaco","Montenegro","Macedonia del Nord","Norvegia","San Marino","Serbia","Ucraina","Citta del Vaticano","Vaticano"]);
+addCountries("regno_unito_svizzera", ["Regno Unito","United Kingdom","UK","Gran Bretagna","Great Britain","Svizzera","Switzerland","Suisse"]);
+addCountries("america", ["Stati Uniti","Stati Uniti d America","USA","United States","United States of America","Canada","Messico","Mexico","Belize","Costa Rica","El Salvador","Guatemala","Honduras","Nicaragua","Panama","Antigua e Barbuda","Bahamas","Barbados","Cuba","Dominica","Repubblica Dominicana","Giamaica","Grenada","Haiti","Saint Kitts e Nevis","Santa Lucia","Saint Vincent e Grenadine","Trinidad e Tobago","Argentina","Bolivia","Brasile","Brazil","Cile","Chile","Colombia","Ecuador","Guyana","Paraguay","Peru","Perù","Suriname","Uruguay","Venezuela"]);
+addCountries("asia_oceania", ["Afghanistan","Armenia","Azerbaigian","Bahrein","Bangladesh","Bhutan","Brunei","Cambogia","Cina","China","Corea del Nord","Corea del Sud","Georgia","Giappone","India","Indonesia","Iran","Iraq","Israele","Giordania","Kazakistan","Kuwait","Kirghizistan","Laos","Libano","Malesia","Maldive","Mongolia","Myanmar","Nepal","Oman","Pakistan","Filippine","Qatar","Arabia Saudita","Singapore","Sri Lanka","Siria","Taiwan","Tagikistan","Thailandia","Timor Est","Turchia","Turkmenistan","Emirati Arabi Uniti","Uzbekistan","Vietnam","Yemen","Australia","Fiji","Kiribati","Isole Marshall","Micronesia","Nauru","Nuova Zelanda","Palau","Papua Nuova Guinea","Samoa","Isole Salomone","Tonga","Tuvalu","Vanuatu"]);
+addCountries("resto_mondo", ["Algeria","Angola","Benin","Botswana","Burkina Faso","Burundi","Camerun","Capo Verde","Repubblica Centrafricana","Ciad","Comore","Congo","Repubblica Democratica del Congo","Costa d Avorio","Gibuti","Egitto","Guinea Equatoriale","Eritrea","Eswatini","Etiopia","Gabon","Gambia","Ghana","Guinea","Guinea-Bissau","Kenya","Lesotho","Liberia","Libia","Madagascar","Malawi","Mali","Mauritania","Mauritius","Marocco","Mozambico","Namibia","Niger","Nigeria","Ruanda","Sao Tome e Principe","Senegal","Seychelles","Sierra Leone","Somalia","Sudafrica","Sud Sudan","Sudan","Tanzania","Togo","Tunisia","Uganda","Zambia","Zimbabwe"]);
+\nDeno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "Metodo non consentito" }, 405);
   const requestOrigin = req.headers.get("Origin");
@@ -29,16 +38,10 @@ Deno.serve(async (req) => {
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-  const shippingCentsRaw = Deno.env.get("SHIPPING_FLAT_RATE_CENTS");
   const siteUrl = (Deno.env.get("SITE_URL") ?? "https://aurenliving.it").replace(/\/$/, "");
-  if (!supabaseUrl || !serviceKey || !stripeKey || shippingCentsRaw === undefined) {
-    return json({ error: "Checkout non configurato: manca anche la tariffa di spedizione" }, 503);
+  if (!supabaseUrl || !serviceKey || !stripeKey) {
+    return json({ error: "Checkout non configurato" }, 503);
   }
-  const shippingCents = Number(shippingCentsRaw);
-  if (!Number.isSafeInteger(shippingCents) || shippingCents < 0 || shippingCents > 100000) {
-    return json({ error: "Tariffa di spedizione non valida" }, 503);
-  }
-  const shippingTotal = shippingCents / 100;
 
   const contentLength = Number(req.headers.get("content-length") ?? "0");
   if (contentLength > 64_000) return json({ error: "Richiesta troppo grande" }, 413);
@@ -78,6 +81,20 @@ Deno.serve(async (req) => {
   const supabase = createClient(supabaseUrl, serviceKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
+  const countryName = normalizeCountry(String(address.country));
+  const shippingZone = countryZones[countryName];
+  if (!shippingZone) return json({ error: "Paese non riconosciuto o non ancora abilitato per la spedizione. Contatta AUREN." }, 400);
+  const { data: shippingConfig, error: shippingError } = await supabase
+    .from("living_shipping_zones").select("rate_eur, active").eq("zone_key", shippingZone).maybeSingle();
+  if (shippingError || !shippingConfig?.active || shippingConfig.rate_eur === null) {
+    console.error("Shipping zone unavailable", { shippingZone, shippingError });
+    return json({ error: "La spedizione verso questo Paese non è ancora configurata." }, 503);
+  }
+  const shippingCents = Math.round(Number(shippingConfig.rate_eur) * 100);
+  if (!Number.isSafeInteger(shippingCents) || shippingCents < 0 || shippingCents > 100000) {
+    return json({ error: "Tariffa di spedizione non valida" }, 503);
+  }
+  const shippingTotal = shippingCents / 100;
   let userId: string | null = null;
   const authHeader = req.headers.get("Authorization");
   if (authHeader?.startsWith("Bearer ") && authHeader.slice(7).startsWith("eyJ")) {
