@@ -21,7 +21,7 @@ Configurare esclusivamente come Supabase Edge Function secrets, mai nel reposito
 - `SITE_URL` — origine HTTPS del sito, ad esempio `https://aurenliving.it`.
 - `RESEND_API_KEY` — chiave Resend, solo come secret server-side.
 - `LIVING_ORDER_EMAIL_FROM` — mittente su un dominio verificato in Resend (non usare un mittente non verificato).
-- `SHIPPING_FLAT_RATE_CENTS` — tariffa di spedizione fissa in centesimi EUR (es. `790` per €7,90). La funzione rifiuta il checkout se manca o non è valida; `0` va impostato solo se AUREN decide esplicitamente di offrire spedizione gratuita.
+- Le tariffe di spedizione sono gestite nella tabella `living_shipping_zones`: Italia, Europa, Regno Unito e Svizzera, America, Asia e Oceania, Resto del mondo. Ogni zona resta disattivata finché un amministratore non inserisce e attiva una tariffa verificata.
 
 La funzione checkout usa anche la sessione utente opzionale nell'header Authorization. L'acquisto guest è possibile con email e indirizzo di spedizione validi.
 
@@ -39,7 +39,7 @@ La funzione checkout usa anche la sessione utente opzionale nell'header Authoriz
 
 ## Limiti da completare prima della vendita reale
 
-- La tariffa spedizione è obbligatoria lato server tramite `SHIPPING_FLAT_RATE_CENTS`; il valore deve essere deciso, verificato e comunicato al cliente prima dell'attivazione.
+- Le tariffe delle sei zone devono essere definite, verificate con il corriere e comunicate al cliente; le zone non configurate restano disabilitate lato server.
 - La funzione checkout richiede email e indirizzo di spedizione; non gestisce ancora imposte, fatturazione, resi o rimborsi.
 - Serve un processo di riconciliazione per sessioni Stripe pagate ma webhook temporaneamente non recapitati.
 - La conferma ordine e le email transazionali sono predisposte nel codice ma non ancora distribuite né collaudate; la pagina di conferma ordine resta da completare.
