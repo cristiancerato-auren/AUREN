@@ -61,6 +61,11 @@ assert.match(files.studio, /if\(!email&&!phone\)/, "Studio requests must require
 assert.match(files.studio, /from\('services'\).select/, "Studio must load admin-managed service prices");
 assert.match(files.journal, /from\('newsletter_subscribers'\).insert/, "Journal newsletter must store subscriptions in Supabase");
 assert.match(files.journal, /journalConsent/, "Journal newsletter must collect explicit consent");
+const newsletterConsentMigration = read("../supabase/migrations/20261124000100_auren_journal_consent.sql");
+assert.match(newsletterConsentMigration, /consent_version = '2026-11-24'/, "Newsletter inserts must identify the consent text version");
+assert.match(newsletterConsentMigration, /new\.consent_at := now\(\)/, "Newsletter consent timestamp must be assigned by the database");
+assert.match(newsletterConsentMigration, /with check \([\s\S]*consent_at is not null/i, "Newsletter inserts must be rejected without a recorded consent timestamp");
+assert.match(files.journal, /consent_version:'2026-11-24'/, "Journal must send the version of the consent text");
 assert.match(files.journal, /href="properties.html"/, "Journal real-estate articles must link to Properties");
 assert.match(files.journal, /href="studio.html"/, "Journal design articles must link to Studio");
 assert.match(files.adminLiving, /account_type/);
