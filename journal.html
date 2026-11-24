@@ -56,7 +56,7 @@ form.addEventListener('submit',async event=>{
  if(!document.getElementById('journalConsent').checked){message.textContent='Conferma il consenso per iscriverti.';return;}
  button.disabled=true;message.textContent='Invio in corso…';
  try{
-  const {error}=await db.from('newsletter_subscribers').insert({email});
+  const {error}=await db.from('newsletter_subscribers').insert({email,consent_version:'2026-11-24'});
   if(error&&!String(error.message).toLowerCase().includes('duplicate'))throw error;
   form.reset();message.textContent='Grazie: la tua iscrizione alla newsletter AUREN è stata registrata.';
  }catch(error){console.error('AUREN Journal newsletter:',error.message);message.textContent='Iscrizione non riuscita. Se eri già iscritto, potresti essere già nella lista.';}
