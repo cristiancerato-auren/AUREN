@@ -35,7 +35,7 @@ footer{padding:28px 0;color:var(--muted);font-size:11px}.foot{display:flex;justi
 <section class="steps"><div class="wrap"><h2>Dal primo contatto al progetto.</h2><div class="steps-grid"><div class="step"><strong>01</strong><h3>Raccontaci cosa serve</h3><p>Seleziona il servizio e descrivi brevemente il tuo spazio, le tempistiche e gli obiettivi.</p></div><div class="step"><strong>02</strong><h3>Definiamo la proposta</h3><p>Verifichiamo disponibilità, ambito di lavoro, prezzo e modalità operative.</p></div><div class="step"><strong>03</strong><h3>Realizziamo insieme</h3><p>Confermiamo l'incarico e sviluppiamo il progetto concordato.</p></div></div></div></section>
 </main>
 <footer><div class="wrap foot"><span>© 2026 AUREN Studio</span><span><a href="privacy.html">Privacy</a> · <a href="terms.html">Condizioni</a> · <a href="index.html">AUREN</a></span></div></footer>
-<div class="modal" id="requestModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="dialog"><div class="dialog-head"><div><div class="eyebrow">AUREN STUDIO</div><h2 id="modalTitle">Parliamo del tuo progetto</h2></div><button class="close" id="closeModal" aria-label="Chiudi">×</button></div><form id="requestForm"><input type="hidden" id="serviceName"><div class="fields"><div><label for="name">Nome</label><input id="name" maxlength="100" autocomplete="name"></div><div><label for="email">Email</label><input id="email" type="email" maxlength="254" autocomplete="email"></div><div class="full"><label for="phone">Telefono</label><input id="phone" type="tel" maxlength="30" autocomplete="tel"></div><div class="full"><label for="details">Descrizione del progetto</label><textarea id="details" maxlength="1500" placeholder="Città, tipologia di spazio, obiettivi e tempistiche"></textarea></div></div><p class="help">È necessario indicare almeno un recapito: email oppure telefono. La richiesta non comporta un acquisto o un pagamento.</p><button class="btn" id="sendRequest" type="submit">Invia richiesta ↗</button></form></div></div>
+<div class="modal" id="requestModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="dialog"><div class="dialog-head"><div><div class="eyebrow">AUREN STUDIO</div><h2 id="modalTitle">Parliamo del tuo progetto</h2></div><button class="close" id="closeModal" aria-label="Chiudi">×</button></div><form id="requestForm"><input type="hidden" id="serviceName"><input type="hidden" id="serviceId"><div class="fields"><div><label for="name">Nome</label><input id="name" maxlength="100" autocomplete="name"></div><div><label for="email">Email</label><input id="email" type="email" maxlength="254" autocomplete="email"></div><div class="full"><label for="phone">Telefono</label><input id="phone" type="tel" maxlength="30" autocomplete="tel"></div><div class="full"><label for="details">Descrizione del progetto</label><textarea id="details" maxlength="1500" placeholder="Città, tipologia di spazio, obiettivi e tempistiche"></textarea></div></div><p class="help">È necessario indicare almeno un recapito: email oppure telefono. La richiesta non comporta un acquisto o un pagamento.</p><button class="btn" id="sendRequest" type="submit">Invia richiesta ↗</button></form></div></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script>
 (()=>{
@@ -47,16 +47,18 @@ const toast=message=>{$('toast').textContent=message;$('toast').style.display='b
 const modal=$('requestModal');
 function open(name){$('serviceName').value=name;$('modalTitle').textContent='Richiesta: '+name;modal.classList.add('open');document.body.style.overflow='hidden';}
 function close(){modal.classList.remove('open');document.body.style.overflow='';}
-document.querySelectorAll('.request').forEach(button=>button.addEventListener('click',()=>open(button.dataset.name)));
+function esc(value){return String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function euro(value){return '€ '+Number(value).toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function open(name,id){$('serviceName').value=name;$('serviceId').value=id;$('modalTitle').textContent='Richiesta: '+name;modal.classList.add('open');document.body.style.overflow='hidden';}
+function close(){modal.classList.remove('open');document.body.style.overflow='';}
 $('closeModal').addEventListener('click',close);modal.addEventListener('click',e=>{if(e.target===modal)close()});document.addEventListener('keydown',e=>{if(e.key==='Escape')close()});
 async function loadPrices(){
- const {data,error}=await db.from('services').select('name,price,active').eq('active',true);
- if(error){console.warn('AUREN Studio catalog:',error.message);return;}
- (data||[]).forEach(service=>{
-  const card=[...document.querySelectorAll('.card')].find(el=>el.querySelector('.request')?.dataset.name.toLowerCase()===service.name.toLowerCase());
-  if(!card)return;
-  card.querySelector('.price').textContent='€ '+Number(service.price).toLocaleString('it-IT')+' · prezzo indicativo';
- });
+ const root=$('serviceGrid');
+ const {data,error}=await db.from('services').select('id,name,description,price,active').eq('active',true).order('name');
+ if(error){console.error('AUREN Studio catalog:',error);root.innerHTML='<p class="help">Il catalogo servizi non è al momento disponibile. Contattaci per informazioni.</p>';return;}
+ if(!data?.length){root.innerHTML='<p class="help">I servizi sono in aggiornamento. Torna a trovarci.</p>';return;}
+ root.innerHTML=data.map((service,index)=>'<article class="card"><div class="number">'+String(index+1).padStart(2,'0')+' / AUREN STUDIO</div><h3>'+esc(service.name)+'</h3><p>'+esc(service.description||'Servizio AUREN Studio. Contattaci per definire il progetto.')+'</p><div class="price">'+euro(service.price)+' · prezzo indicativo</div><button class="btn request" type="button" data-id="'+esc(service.id)+'" data-name="'+esc(service.name)+'">Richiedi informazioni ↗</button></article>').join('');
+ root.querySelectorAll('.request').forEach(button=>button.addEventListener('click',()=>open(button.dataset.name,button.dataset.id)));
 }
 $('requestForm').addEventListener('submit',async event=>{
  event.preventDefault();
@@ -65,10 +67,11 @@ $('requestForm').addEventListener('submit',async event=>{
  const button=$('sendRequest');button.disabled=true;
  try{
   const name=$('serviceName').value;
-  const {data:service}=await db.from('services').select('id,price').eq('name',name).maybeSingle();
+  const {data:service,error:serviceError}=await db.from('services').select('id,price').eq('id',$('serviceId').value).eq('active',true).maybeSingle();
+   if(serviceError||!service)throw new Error('Il servizio selezionato non è più disponibile. Aggiorna la pagina e riprova.');
   const {data:{session}}=await db.auth.getSession();
   const {error}=await db.from('service_requests').insert({
-   user_id:session?.user?.id||null,service_id:service?.id||null,
+   user_id:session?.user?.id||null,service_id:service.id,
    contact_email:email||null,contact_phone:phone||null,
    notes:['Richiesta Studio: '+name,service?'Prezzo indicativo a catalogo: €'+service.price:'Prezzo da definire',$('name').value.trim()?'Nome: '+$('name').value.trim():'',$('details').value.trim()?'Dettagli: '+$('details').value.trim():''].filter(Boolean).join('\n'),
    status:'pending'
