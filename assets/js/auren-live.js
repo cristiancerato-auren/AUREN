@@ -175,7 +175,9 @@
     const button = $('newsletterForm').querySelector('button');
     button.disabled = true;
     try {
-      const { error } = await db.from('newsletter_subscribers').insert({ email });
+      const consent = $('newsletterConsent');
+    if (!consent?.checked) { notify('Per iscriverti devi confermare il consenso alla newsletter.'); return; }
+    const { error } = await db.from('newsletter_subscribers').insert({ email, consent_version: '2026-11-24' });
       if (error && !String(error.message).toLowerCase().includes('duplicate')) throw error;
       $('newsletterForm').reset();
       notify('Grazie: iscrizione alla newsletter AUREN registrata.');
