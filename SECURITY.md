@@ -1,10 +1,12 @@
 # Security policy — AUREN
 
-## Current status
+## Current deployment status
 
-AUREN is currently a static concept/demo hosted on GitHub Pages. Listing creation, favourites, newsletter, and service-request forms are client-side demonstrations; they do not provide a production backend, secure persistence, user authentication, listing moderation, or payment processing.
+The published GitHub Pages site on `main` is a static website. The separate `auren-living-development` branch contains Supabase-backed account, property, service-request and newsletter integrations, plus prepared Living commerce code. That branch is still a draft and is not the production deployment.
 
-**Do not enter real personal, financial, or confidential information into demo forms. Do not use the demo to accept payments or publish real customer data.** HTML form limits and browser-side validation are usability safeguards, not server-side security controls.
+The Supabase portal schema is active, but the Living commerce migrations and the prepared Edge Functions have not been deployed to the live project. Stripe checkout and transactional email are not active. Do not accept real payments or treat the development checkout as operational.
+
+**Do not enter payment-card details or confidential information into any development or demo form.** Do not publish real customer data until the deployment, privacy, access-control and operational checks are complete.
 
 ## Reporting a security issue
 
@@ -12,4 +14,6 @@ Please report suspected vulnerabilities privately to **hello@aurenliving.it** wi
 
 ## Scope and limitations
 
-This policy does not mean the site has undergone an independent penetration test, security audit, or certification. Before production use, AUREN needs a reviewed backend, server-side validation, access controls, privacy and cookie compliance review, secure handling of contact data, backups/monitoring, and a compliant payment provider if payments are introduced.
+The development branch has automated static checks and database access policies, but this is not an independent penetration test, security audit, legal review, or certification. Before production use, AUREN still needs end-to-end tests with distinct account roles, review of Supabase RLS and Storage policies, verified email delivery, payment-provider testing, backup and rollback validation, and completed privacy, cookie, seller and sales documentation.
+
+Never commit service-role keys, Stripe secrets, Resend API keys, webhook secrets, passwords, or other credentials to the repository or browser code. Store server credentials only in the relevant hosting or Supabase secret manager.
