@@ -14,11 +14,12 @@ Questo documento separa le funzionalità preparate nel codice dalle attività ch
 
 ## Da collaudare prima del rilascio
 
-- [ ] Eseguire con esito positivo la pipeline GitHub Actions (controlli HTML/JavaScript e type-check Edge Functions).
+- [x] Pipeline GitHub Actions superata: controlli statici HTML/JavaScript e type-check delle Edge Functions (commit `02d2c82`).
 - [ ] Testare registrazione, login, logout, recupero password e protezione delle password compromesse.
 - [ ] Testare Properties con account privato, account agenzia, utente non autenticato e amministratore.
 - [ ] Verificare upload, dimensione, tipo e accesso alle immagini; controllare che un utente non possa modificare annunci altrui.
-- [ ] Testare richieste Studio e newsletter da anonimo e da utente autenticato; verificare anti-spam e gestione richieste.
+- [ ] Applicare in staging la migrazione `20261124000100_auren_journal_consent.sql` e verificare che ogni nuova iscrizione registri la versione del consenso e il timestamp server.
+- [ ] Testare richieste Studio e newsletter da anonimo e da utente autenticato; verificare anti-spam, duplicati e gestione richieste.
 - [ ] Popolare il catalogo Living con prodotti, fotografie, varianti, prezzi, SKU e disponibilità reali.
 - [ ] Popolare il catalogo Studio con nomi, descrizioni e prezzi approvati dal titolare.
 - [ ] Testare tutte le policy RLS con utenti distinti e ruolo admin.
