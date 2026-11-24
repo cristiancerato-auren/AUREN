@@ -10,6 +10,7 @@ const files = {
   admin: read("../admin.html"),
   living: read("../living.html"),
   adminLiving: read("../admin-living.html"),
+  studio: read("../studio.html"),
   privacy: read("../privacy.html"),
   terms: read("../terms.html"),
   live: read("../assets/js/auren-live.js")
@@ -31,6 +32,7 @@ checkHtmlScripts(files.account, "account.html");
 checkHtmlScripts(files.admin, "admin.html");
 checkHtmlScripts(files.living, "living.html");
 checkHtmlScripts(files.adminLiving, "admin-living.html");
+checkHtmlScripts(files.studio, "studio.html");
 new vm.Script(files.live, {filename:"assets/js/auren-live.js"});
 console.log("✓ Live Supabase integration JavaScript syntax");
 
@@ -50,6 +52,11 @@ assert.match(files.account, /from\('living_orders'\)/, "Account must load custom
 assert.match(files.account, /from\('living_order_items'\)/, "Account must load order line items through Supabase RLS");
 assert.match(files.account, /ordersPanel/, "Account must render the order history panel");
 assert.match(files.admin, /account_type/);
+assert.match(files.admin, /newServiceForm/, "Admin must allow creating service catalog entries");
+assert.match(files.admin, /from\('services'\).insert/, "Admin service creation must persist to Supabase");
+assert.match(files.studio, /from\('service_requests'\).insert/, "Studio requests must be stored in the service request table");
+assert.match(files.studio, /if\(!email&&!phone\)/, "Studio requests must require at least one contact method");
+assert.match(files.studio, /from\('services'\).select/, "Studio must load admin-managed service prices");
 assert.match(files.adminLiving, /account_type/);
 assert.match(files.living, /living_products/);
 assert.match(files.living, /Varianti momentaneamente esaurite/, "Storefront must not offer variant products with no available variants");
