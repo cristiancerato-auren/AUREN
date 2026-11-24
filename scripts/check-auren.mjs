@@ -72,6 +72,7 @@ assert.match(files.adminLiving, /images=safeImageUrls\(val\('images'\)\)/, "Admi
 const commerceMigration = read("../supabase/migrations/20261110000100_auren_living_commerce.sql");
 assert.match(commerceMigration, /p_items is null/, "Reservation SQL must reject a null cart");
 assert.match(commerceMigration, /is distinct from 'array'/, "Reservation SQL must reject non-array carts safely");
+assert.ok(commerceMigration.trimEnd().endsWith("revoke all on function public.enforce_living_order_paid_before_shipment() from public, anon, authenticated;"), "Commerce migration must not contain a dangling duplicated SQL fragment");
 assert.match(commerceMigration, /paid_email_sent_at/);
 assert.match(commerceMigration, /shipped_email_sent_at/);
 const emailSource = read("../supabase/functions/_shared/living-order-email.ts");
