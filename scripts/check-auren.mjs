@@ -11,6 +11,7 @@ const files = {
   living: read("../living.html"),
   adminLiving: read("../admin-living.html"),
   studio: read("../studio.html"),
+  journal: read("../journal.html"),
   privacy: read("../privacy.html"),
   terms: read("../terms.html"),
   live: read("../assets/js/auren-live.js")
@@ -33,6 +34,7 @@ checkHtmlScripts(files.admin, "admin.html");
 checkHtmlScripts(files.living, "living.html");
 checkHtmlScripts(files.adminLiving, "admin-living.html");
 checkHtmlScripts(files.studio, "studio.html");
+checkHtmlScripts(files.journal, "journal.html");
 new vm.Script(files.live, {filename:"assets/js/auren-live.js"});
 console.log("✓ Live Supabase integration JavaScript syntax");
 
@@ -57,6 +59,10 @@ assert.match(files.admin, /from\('services'\).insert/, "Admin service creation m
 assert.match(files.studio, /from\('service_requests'\).insert/, "Studio requests must be stored in the service request table");
 assert.match(files.studio, /if\(!email&&!phone\)/, "Studio requests must require at least one contact method");
 assert.match(files.studio, /from\('services'\).select/, "Studio must load admin-managed service prices");
+assert.match(files.journal, /from\('newsletter_subscribers'\).insert/, "Journal newsletter must store subscriptions in Supabase");
+assert.match(files.journal, /journalConsent/, "Journal newsletter must collect explicit consent");
+assert.match(files.journal, /href="properties.html"/, "Journal real-estate articles must link to Properties");
+assert.match(files.journal, /href="studio.html"/, "Journal design articles must link to Studio");
 assert.match(files.adminLiving, /account_type/);
 assert.match(files.living, /living_products/);
 assert.match(files.living, /Varianti momentaneamente esaurite/, "Storefront must not offer variant products with no available variants");
