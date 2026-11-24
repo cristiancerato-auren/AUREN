@@ -58,7 +58,7 @@ const $=id=>document.getElementById(id);
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const safeImage=value=>{try{const u=new URL(value);return u.protocol==='https:'?u.href:''}catch{return ''}};
 const euro=value=>Number(value||0).toLocaleString('it-IT',{style:'currency',currency:'EUR',maximumFractionDigits:0});
-let session=null,allListings=[];
+let session=null,allListings=[],activeProperty=null;
 function toast(message){$('toast').textContent=message;$('toast').style.display='block';window.clearTimeout(window.__aurenPropertiesToast);window.__aurenPropertiesToast=window.setTimeout(()=>$('toast').style.display='none',4200)}
 function openModal(id){$(id).classList.add('open');document.body.style.overflow='hidden'}
 function closeModal(id){$(id).classList.remove('open');document.body.style.overflow=''}
@@ -81,7 +81,7 @@ async function loadListings(){
  allListings=data||[];applyFilters();
 }
 async function showDetail(id){
- const p=allListings.find(item=>item.id===id);if(!p)return;
+ const p=allListings.find(item=>item.id===id);if(!p)return;activeProperty=p;
  let gallery=[];
  try{const {data}=await db.from('property_images').select('image_url').eq('property_id',id).limit(20);gallery=(data||[]).map(x=>safeImage(x.image_url)).filter(Boolean)}catch(e){console.warn(e)}
  const images=[...new Set([safeImage(p.image_url),...gallery].filter(Boolean))];
@@ -96,7 +96,7 @@ async function loadMine(){
  if(!data?.length){$('mineList').textContent='Non hai ancora inviato annunci.';return}
  $('mineList').innerHTML=data.map(p=>'<div class="my-item"><div><strong>'+esc(p.title)+'</strong><div class="muted">'+esc(p.city)+' · '+euro(p.price)+'</div></div><span class="status">'+esc(statusLabel(p.status))+'</span></div>').join('');
 }
-$('detailContent').addEventListener('submit',async e=>{if(e.target.id!=='contactForm')return;e.preventDefault();const email=$('contactEmail').value.trim(),phone=$('contactPhone').value.trim();if(!email&&!phone){toast('Inserisci almeno email oppure telefono.');return}const button=$('sendContact');button.disabled=true;try{const title=$('detailTitle')?.textContent||'Immobile';const notes=['Richiesta informazioni immobile: '+title,'ID immobile: '+(allListings.find(p=>p.title===title)?.id||''),'Nome: '+$('contactName').value.trim(),'Messaggio: '+$('contactMessage').value.trim()].join('\\n');const {error}=await db.from('service_requests').insert({user_id:session?.user?.id||null,service_id:null,contact_email:email||null,contact_phone:phone||null,notes,status:'pending'});if(error)throw error;$('contactForm').reset();toast('Richiesta inviata. Grazie per aver contattato AUREN.')}catch(error){console.error('AUREN property inquiry:',error);toast('Invio non riuscito. Riprova più tardi.')}finally{button.disabled=false}});
+$('detailContent').addEventListener('submit',async e=>{if(e.target.id!=='contactForm')return;e.preventDefault();const email=$('contactEmail').value.trim(),phone=$('contactPhone').value.trim();if(!email&&!phone){toast('Inserisci almeno email oppure telefono.');return}const button=$('sendContact');button.disabled=true;try{const title=$('detailTitle')?.textContent||'Immobile';const notes=['Richiesta informazioni immobile: '+title,'ID immobile: '+(activeProperty?.id||''),'Nome: '+$('contactName').value.trim(),'Messaggio: '+$('contactMessage').value.trim()].join('\\n');const {error}=await db.from('service_requests').insert({user_id:session?.user?.id||null,service_id:null,contact_email:email||null,contact_phone:phone||null,notes,status:'pending'});if(error)throw error;$('contactForm').reset();toast('Richiesta inviata. Grazie per aver contattato AUREN.')}catch(error){console.error('AUREN property inquiry:',error);toast('Invio non riuscito. Riprova più tardi.')}finally{button.disabled=false}});
 async function startPublish(){
  if(!session){toast('Accedi o crea un account AUREN per pubblicare un immobile.');location.href='account.html';return}
  openModal('listingModal');
