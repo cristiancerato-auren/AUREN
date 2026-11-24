@@ -63,6 +63,8 @@ assert.match(portalSecurityMigration, /newsletter_subscribers_email_lower_uidx/,
 assert.match(files.admin, /newServiceForm/, "Admin must allow creating service catalog entries");
 assert.match(files.admin, /from\('services'\).insert/, "Admin service creation must persist to Supabase");
 assert.match(files.studio, /from\('service_requests'\).insert/, "Studio requests must be stored in the service request table");
+assert.match(files.studio, /from\('services'\).select\('id,name,description,price,active'\)/, "Studio must render the admin-managed service catalogue");
+assert.match(files.studio, /eq\('id',\$\('serviceId'\)\.value\)\.eq\('active',true\)/, "Studio requests must reference a currently active service");
 assert.match(files.studio, /if\(!email&&!phone\)/, "Studio requests must require at least one contact method");
 assert.match(files.studio, /from\('services'\).select/, "Studio must load admin-managed service prices");
 assert.match(files.journal, /from\('newsletter_subscribers'\).insert/, "Journal newsletter must store subscriptions in Supabase");
