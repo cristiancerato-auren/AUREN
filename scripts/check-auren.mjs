@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 const read = (path) => fs.readFileSync(new URL(path, import.meta.url), "utf8");
 const files = {
   index: read("../index.html"),
+  properties: read("../properties.html"),
   account: read("../account.html"),
   admin: read("../admin.html"),
   living: read("../living.html"),
@@ -25,6 +26,7 @@ function checkHtmlScripts(html, filename) {
   console.log("✓ Inline JavaScript syntax: " + filename);
 }
 checkHtmlScripts(files.index, "index.html");
+checkHtmlScripts(files.properties, "properties.html");
 checkHtmlScripts(files.account, "account.html");
 checkHtmlScripts(files.admin, "admin.html");
 checkHtmlScripts(files.living, "living.html");
@@ -34,6 +36,11 @@ console.log("✓ Live Supabase integration JavaScript syntax");
 
 assert.match(files.index, /href=["']account\.html["']/i);
 assert.match(files.index, /assets\/js\/auren-live\.js/);
+assert.match(files.index, /properties\.html/, "Homepage must link to the standalone Properties portal");
+assert.match(files.properties, /from\(\x27properties\x27\)/, "Properties portal must load live listings");
+assert.match(files.properties, /from\(\x27service_requests\x27\)/, "Property inquiries must be stored as service requests");
+assert.match(files.properties, /status:\x27pending\x27/, "New property listings must enter moderation as pending");
+assert.match(files.properties, /safeImage/, "Property image URLs must be HTTPS validated");
 assert.match(files.live, /from\('properties'\)/);
 assert.match(files.live, /from\('service_requests'\)/);
 assert.match(files.live, /from\('newsletter_subscribers'\)/);
