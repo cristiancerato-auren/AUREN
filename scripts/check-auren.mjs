@@ -48,6 +48,8 @@ assert.match(files.properties, /safeImage/, "Property image URLs must be HTTPS v
 assert.match(files.live, /from\('properties'\)/);
 assert.match(files.live, /from\('service_requests'\)/);
 assert.match(files.live, /from\('newsletter_subscribers'\)/);
+assert.match(files.index, /id="newsletterConsent"[^>]*required/, "Homepage newsletter must require explicit consent");
+assert.match(files.live, /consent_version:\s*'2026-11-24'/, "Homepage newsletter must persist the consent version required by the database");
 assert.match(files.account, /signInWithPassword/);
 assert.match(files.account, /signUp/);
 assert.match(files.account, /from\('living_orders'\)/, "Account must load customer orders through Supabase RLS");
