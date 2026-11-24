@@ -8,7 +8,7 @@ on public.profiles for update to authenticated
 using (id = (select auth.uid()))
 with check (id = (select auth.uid()));
 
-revoke update on public.profiles from authenticated;
+revoke update on public.profiles from public, anon, authenticated;
 grant update (full_name, phone) on public.profiles to authenticated;
 
 -- Visitors may submit a new request, but cannot choose its workflow state
