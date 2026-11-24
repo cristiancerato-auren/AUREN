@@ -133,6 +133,8 @@ assert.match(checkoutSource, /countryZones\[countryName\]/, "Checkout must map t
 assert.match(checkoutSource, /countryZones: Record<string, string> = Object\.create\(null\)/, "Country-zone lookup must not inherit unsafe object prototype keys");
 assert.match(checkoutSource, /if \(!countryZones\[key\]\) countryZones\[key\] = zone/, "Specific shipping zones must not be overwritten by later geographic aliases");
 assert.match(checkoutSource, /addCountries\("italia", \["Italia","Italy"\]\)/, "Italy must have its own shipping zone");
+assert.match(checkoutSource, /addCountries\("regno_unito_svizzera", \[[^\]]*"Switzerland"\]/, "Switzerland must use its dedicated shipping zone");
+assert.doesNotMatch(checkoutSource.match(/addCountries\("europa", \["Belgium"[\s\S]*?\);/)?.[0] || "", /"Italy"|"Switzerland"/, "Dedicated shipping countries must not be reassigned to Europe");
 assert.match(checkoutSource, /addCountries\("regno_unito_svizzera", \["Regno Unito","United Kingdom"/, "United Kingdom and Switzerland must retain their dedicated shipping zone");
 
 
