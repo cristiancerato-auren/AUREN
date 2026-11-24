@@ -55,7 +55,7 @@ assert.match(files.account, /from\('living_order_items'\)/, "Account must load o
 assert.match(files.account, /ordersPanel/, "Account must render the order history panel");
 assert.match(files.admin, /account_type/);
 const portalSecurityMigration = read("../supabase/migrations/20261124000200_auren_portal_security_hardening.sql");
-assert.match(portalSecurityMigration, /revoke update on public\.profiles from authenticated/i, "Users must not be able to update their own admin role");
+assert.match(portalSecurityMigration, /revoke update on public\.profiles from public, anon, authenticated/i, "Users must not be able to update their own admin role");
 assert.match(portalSecurityMigration, /grant update \(full_name, phone\) on public\.profiles to authenticated/i, "Profile updates must be limited to safe contact fields");
 assert.match(portalSecurityMigration, /status = 'pending'/, "Public service requests must enter moderation as pending");
 assert.match(portalSecurityMigration, /s\.active = true/, "Public service requests must reference active services only");
