@@ -41,7 +41,8 @@ addCountries("europa", ["Russia","Russian Federation","Federazione Russa"]);
 addCountries("asia_oceania", ["Palestina","State of Palestine","Hong Kong","Hong Kong SAR","Macao","Macau","Macao SAR","Russia (Asian region)"]);
 addCountries("america", ["Puerto Rico","Guam","U.S. Virgin Islands","Isole Vergini Americane","British Virgin Islands","Isole Vergini Britanniche","Aruba","Curaçao","Curacao","Sint Maarten","Saint Martin","Martinica","Martinique","Guadalupa","Guadeloupe","Guyana Francese","French Guiana","Isole Cayman","Cayman Islands","Bermuda","Bonaire","Saint Barthélemy","Saint Barthelemy","Turks and Caicos Islands","Isole Turks e Caicos","Montserrat","Anguilla","Saint Pierre e Miquelon","Saint Pierre and Miquelon","Isole Falkland","Falkland Islands"]);
 addCountries("resto_mondo", ["Côte d'Ivoire","Ivory Coast","Democratic Republic of the Congo","DR Congo","Republic of the Congo","Congo-Brazzaville","Congo-Kinshasa","Western Sahara","Sahrawi Arab Democratic Republic","Réunion","Reunion","Mayotte","French Southern Territories","South Georgia and the South Sandwich Islands","Saint Helena","Ascension Island","Tristan da Cunha"]);
-\nDeno.serve(async (req) => {
+
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "Metodo non consentito" }, 405);
   const requestOrigin = req.headers.get("Origin");
