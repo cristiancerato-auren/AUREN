@@ -63,6 +63,12 @@ assert.match(privateStorageMigration, /file_size_limit = 5242880/i, "Storage mus
 assert.match(privateStorageMigration, /allowed_mime_types = array\['image\/jpeg','image\/png','image\/webp'\]/i, "Storage must restrict image types");
 assert.match(privateStorageMigration, /p\.status = 'published'/i, "Anonymous image access must be limited to published properties");
 assert.match(privateStorageMigration, /p\.status = 'pending'/i, "Image uploads must be limited to pending owner properties");
+const rateLimitMigration = read("../supabase/migrations/20261126000300_auren_public_form_rate_limit.sql");
+assert.match(rateLimitMigration, /security definer/i, "Public request rate limiting must not rely on client-side throttling");
+assert.match(rateLimitMigration, /pg_advisory_xact_lock/i, "Public request rate limiting must serialize concurrent submissions");
+assert.match(rateLimitMigration, /v_recent_count >= 3/i, "Public Studio requests must be rate limited");
+assert.match(rateLimitMigration, /interval '10 minutes'/i, "Public Studio request rate limit must use a rolling 10-minute window");
+
 assert.match(files.storage, /createSignedUrl/, "Private property images must use expiring signed URLs");
 assert.match(files.storage, /storage\.from\(BUCKET\)\.remove/, "Failed multi-image uploads must clean up already uploaded files");
 assert.match(files.headers, /Content-Security-Policy:/, "Static hosting must set a Content Security Policy");
