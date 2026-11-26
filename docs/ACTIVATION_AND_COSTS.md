@@ -6,7 +6,7 @@ Questo documento è un promemoria decisionale, non un ordine di acquisto. Nessun
 
 - Dominio `aurenliving.it`: già acquistato su Aruba; resta da verificare la data e il costo di rinnovo nel pannello Aruba.
 - GitHub Free: repository e Actions per repository pubblici sono disponibili a costo zero nei limiti del piano.
-- Supabase Free: $0/mese, con limiti di utilizzo e sospensione dei progetti inattivi; non offre protezione password compromesse né backup automatici giornalieri.
+- Supabase Free: $0/mese, con limiti di utilizzo e sospensione dei progetti inattivi; include MFA di base (TOTP) e permette di configurare lunghezza e complessità delle password. Non include il controllo automatico delle password compromesse né backup automatici giornalieri.
 - Resend Free: $0/mese, fino a 3.000 email/mese e 100 email/giorno, con massimo 3 domini.
 - Stripe test mode: $0 per simulare pagamenti; non incassa denaro reale.
 - Sviluppo e test locali: nessun costo di hosting aggiuntivo se eseguiti sul computer, senza creare risorse cloud a consumo.
@@ -46,3 +46,6 @@ I prezzi possono cambiare; ricontrollarli nelle pagine ufficiali prima di una de
 - [Netlify Free plan — prezzi e limiti](https://www.netlify.com/pricing/)
 - [Netlify Free plan — progetti commerciali consentiti](https://www.netlify.com/blog/introducing-netlify-free-plan/)
 - [Netlify — dettagli sui crediti e limite rigido del piano Free](https://docs.netlify.com/manage/accounts-and-billing/billing/billing-for-credit-based-plans/credit-based-pricing-plans/)
+
+- [Supabase Auth — impostazioni password e protezione password compromesse](https://supabase.com/docs/guides/auth/password-security)
+- [Supabase Free — MFA di base incluso, leaked-password protection non inclusa](https://supabase.com/pricing)
