@@ -14,6 +14,6 @@ Please report suspected vulnerabilities privately to **hello@aurenliving.it** wi
 
 ## Scope and limitations
 
-The development branch has automated static checks and database access policies, but this is not an independent penetration test, security audit, legal review, or certification. Before production use, AUREN still needs end-to-end tests with distinct account roles, review of Supabase RLS and Storage policies, verified email delivery, payment-provider testing, backup and rollback validation, and completed privacy, cookie, seller and sales documentation.
+The development branch now includes Netlify security headers and a prepared private-storage migration. These headers and storage policies are not active on the current GitHub Pages production site until the branch is deployed and the owner approves the cutover. Automated static checks and database access policies are not an independent penetration test, security audit, legal review, or certification. Before production use, AUREN still needs end-to-end tests with distinct account roles, review of Supabase RLS and Storage policies, verified email delivery, payment-provider testing, backup and rollback validation, and completed privacy, cookie, seller and sales documentation.
 
 Never commit service-role keys, Stripe secrets, Resend API keys, webhook secrets, passwords, or other credentials to the repository or browser code. Store server credentials only in the relevant hosting or Supabase secret manager.
