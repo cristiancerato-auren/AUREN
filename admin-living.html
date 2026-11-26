@@ -63,7 +63,7 @@
 <div class="panel"><h2>Ordini ricevuti</h2><p class="muted">Dettagli cliente, articoli, indirizzo, pagamento, evasione e tracciamento.</p><div class="grid" style="margin-bottom:14px"><label class="field">Cerca ordine, cliente o email<input id="orderSearch" type="search" placeholder="Numero ordine, nome, email…"></label><label class="field">Filtra per evasione<select id="orderFilter"><option value="">Tutti gli stati</option><option value="unfulfilled">Da evadere</option><option value="processing">In preparazione</option><option value="shipped">Spediti</option><option value="delivered">Consegnati</option><option value="cancelled">Annullati</option></select></label><label class="field">Filtra per pagamento<select id="paymentFilter"><option value="">Tutti i pagamenti</option><option value="paid">Pagati</option><option value="pending">In attesa</option><option value="failed">Non riusciti</option><option value="refunded">Rimborsati</option><option value="partially_refunded">Parzialmente rimborsati</option></select></label></div><div id="orders"></div></div>
 </section>
 </main>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.2"></script>
 <script>
 (() => {
  const db=window.supabase.createClient('https://upcgbbwwghaazsqfbwri.supabase.co','sb_publishable_SrxxuVdqu0TqBEhkfxIO1Q_Xdi834aQ');
