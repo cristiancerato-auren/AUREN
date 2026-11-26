@@ -17,7 +17,7 @@ Questo documento separa le funzionalità preparate nel codice dalle attività ch
 - [x] Pipeline GitHub Actions superata: controlli statici HTML/JavaScript e type-check delle Edge Functions (commit `02d2c82`).
 - [ ] Testare registrazione, login, logout, recupero password e protezione delle password compromesse. Il controllo password compromesse risulta ancora disattivato nel progetto Supabase.
 - [ ] Testare Properties con account privato, account agenzia, utente non autenticato e amministratore.
-- [ ] Verificare upload, dimensione, tipo e accesso alle immagini; il bucket `property-images` è attualmente pubblico, quindi definire e testare la strategia per non esporre fotografie di annunci non approvati prima di accettare upload reali.
+- [ ] La migrazione `20261126000200_auren_private_property_storage.sql` rende privato il bucket immagini, limita i file a JPG/PNG/WebP da massimo 5 MB e consente link firmati solo a immagini di annunci pubblicati o al proprietario/amministratore. È preparata ma NON applicata al database operativo: applicarla soltanto dopo aver distribuito il frontend compatibile e testato la preview.
 - [ ] Il database operativo non contiene ancora `consent_version` e `consent_at`: applicare la migrazione `20261124000100_auren_journal_consent.sql` solo dopo backup e approvazione; poi testare la registrazione del consenso. Non creare un branch Supabase a pagamento per lo staging.
 - [ ] Testare richieste Studio da anonimo e autenticato; verificare anti-spam e gestione richieste. La newsletter resta sospesa finché la migrazione del consenso non è approvata e applicata.
 - [ ] Popolare il catalogo Living con prodotti, fotografie, varianti, prezzi, SKU e disponibilità reali.
