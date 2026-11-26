@@ -180,6 +180,8 @@ assert.match(checkoutSource, /p_request_hash: requestHash/, "Database reservatio
 assert.match(checkoutSource, /outcome is unknown; reservation retained for safe retry/, "Ambiguous Stripe network outcomes must not release stock");
 assert.match(files.living, /aurenLivingCheckoutAttempt/, "Storefront must persist the checkout attempt ID across retry attempts");
 assert.match(files.living, /id="checkoutSubmit"[^>]*disabled/, "Living checkout must remain disabled until payment, shipping and server functions are configured");
+assert.match(files.living, /const CHECKOUT_ENABLED = false/, "Checkout must be hard-disabled in its submit handler until launch checks pass");
+assert.match(files.living, /if\(!CHECKOUT_ENABLED\)[\s\S]*?Nessun dato è stato inviato/, "Programmatic form submission must fail closed while checkout is disabled");
 assert.match(files.living, /Il checkout non è ancora attivo/, "Living must clearly disclose that online orders are not yet active");
 assert.match(files.living, /name="country"[^>]*list="countryOptions"/, "Worldwide checkout must offer country suggestions");
 assert.match(files.living, /<datalist id="countryOptions">/, "Checkout country suggestions must be available to customers");
