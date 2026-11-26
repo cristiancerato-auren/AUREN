@@ -17,6 +17,7 @@ header{position:sticky;top:0;z-index:10;background:#f4eee7ed;border-bottom:1px s
 @media(max-width:600px){.wrap{width:calc(100% - 30px)}.nav{height:auto;padding:15px 0;align-items:flex-start;flex-direction:column}.links{flex-wrap:wrap}.nav-actions{width:100%;justify-content:space-between}.hero{grid-template-columns:1fr;padding:45px 0 28px}.hero-art{height:240px}.search{grid-template-columns:1fr}.search .btn{grid-column:auto}.grid{grid-template-columns:1fr}.section-head{align-items:start;flex-direction:column}.form-grid{grid-template-columns:1fr}.form-grid .full{grid-column:auto}.my-item{align-items:flex-start;flex-direction:column}.panel{padding:18px}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/js/auren-storage.js"></script>
 </head>
 <body>
 <header><div class="wrap nav"><a class="brand" href="index.html">AUREN<small>PROPERTIES</small></a><nav class="links" aria-label="Navigazione"><a href="index.html">AUREN</a><a href="living.html">Living</a><a href="journal.html">Journal</a><a href="index.html#studio">Studio</a></nav><div class="nav-actions"><a class="btn ghost" id="accountLink" href="account.html">Accedi</a><button class="btn" id="publishBtn" type="button">Pubblica immobile</button></div></div></header>
@@ -44,6 +45,7 @@ header{position:sticky;top:0;z-index:10;background:#f4eee7ed;border-bottom:1px s
 <div class="field"><label for="newBeds">Camere</label><input id="newBeds" type="number" min="0" max="50" step="1"></div>
 <div class="field"><label for="newBaths">Bagni</label><input id="newBaths" type="number" min="0" max="30" step="1"></div>
 <div class="field"><label for="newImage">Immagine principale (URL HTTPS)</label><input id="newImage" type="url" placeholder="https://…"></div>
+<div class="field full"><label for="newFiles">Fotografie dell'immobile (JPG, PNG o WebP)</label><input id="newFiles" type="file" accept="image/jpeg,image/png,image/webp" multiple><small class="help">Massimo 20 fotografie, 5 MB ciascuna. Le fotografie degli annunci in attesa restano private.</small></div>
 <div class="field full"><label for="newDescription">Descrizione</label><textarea id="newDescription" maxlength="5000" required placeholder="Descrivi le caratteristiche principali dell'immobile"></textarea></div>
 </div><p class="help">L'annuncio viene salvato come “in attesa” e non è visibile al pubblico finché non viene approvato. Inserisci solo informazioni che sei autorizzato a pubblicare.</p><button class="btn" id="submitListing" type="submit">Invia annuncio</button></form></div></div>
 <div class="modal" id="detailModal" role="dialog" aria-modal="true" aria-labelledby="detailTitle"><div class="dialog"><div class="dialog-head"><div class="eyebrow">Scheda immobile</div><button class="close" id="closeDetail" type="button" aria-label="Chiudi">×</button></div><div id="detailContent"></div></div></div>
@@ -56,7 +58,7 @@ const SUPABASE_KEY='sb_publishable_SrxxuVdqu0TqBEhkfxIO1Q_Xdi834aQ';
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const $=id=>document.getElementById(id);
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const safeImage=value=>{try{const u=new URL(value);return u.protocol==='https:'?u.href:''}catch{return ''}};
+const safeImage=value=>{try{const u=new URL(value);return u.protocol==='https:'&&!u.username&&!u.password?u.href:''}catch{return ''}};
 const euro=value=>Number(value||0).toLocaleString('it-IT',{style:'currency',currency:'EUR',maximumFractionDigits:0});
 let session=null,allListings=[],activeProperty=null;
 function toast(message){$('toast').textContent=message;$('toast').style.display='block';window.clearTimeout(window.__aurenPropertiesToast);window.__aurenPropertiesToast=window.setTimeout(()=>$('toast').style.display='none',4200)}
@@ -78,12 +80,12 @@ async function loadListings(){
  $('listings').innerHTML='<div class="empty">Caricamento annunci…</div>';
  const {data,error}=await db.from('properties').select('id,title,description,property_type,listing_type,price,city,surface_sqm,bedrooms,bathrooms,image_url,created_at').eq('status','published').order('created_at',{ascending:false}).limit(100);
  if(error){console.error('AUREN Properties:',error);$('listings').innerHTML='<div class="empty">Non è stato possibile caricare gli annunci. Riprova più tardi.</div>';$('resultCount').textContent='Servizio temporaneamente non disponibile';return}
- allListings=data||[];applyFilters();
+ allListings=await Promise.all((data||[]).map(async p=>({...p,image_url:await window.AURENStorage.resolveImageUrl(db,p.image_url)})));applyFilters();
 }
 async function showDetail(id){
  const p=allListings.find(item=>item.id===id);if(!p)return;activeProperty=p;
  let gallery=[];
- try{const {data}=await db.from('property_images').select('image_url').eq('property_id',id).limit(20);gallery=(data||[]).map(x=>safeImage(x.image_url)).filter(Boolean)}catch(e){console.warn(e)}
+ try{const {data}=await db.from('property_images').select('image_url,storage_path').eq('property_id',id).limit(20);gallery=await Promise.all((data||[]).map(x=>window.AURENStorage.resolveImageUrl(db,x.image_url,x.storage_path)));gallery=gallery.map(safeImage).filter(Boolean)}catch(e){console.warn(e)}
  const images=[...new Set([safeImage(p.image_url),...gallery].filter(Boolean))];
  $('detailContent').innerHTML=(images.length?'<img class="detail-image" src="'+esc(images[0])+'" alt="'+esc(p.title)+'">':'')+'<div class="place" style="margin-top:18px">'+esc(p.city)+' · '+esc(p.property_type||'Immobile')+'</div><h2 id="detailTitle">'+esc(p.title)+'</h2><p><strong>'+euro(p.price)+'</strong> · '+(p.listing_type==='rent'?'In affitto':'In vendita')+'</p><p class="muted">'+esc(p.description||'Descrizione non disponibile.')+'</p><p class="muted">'+(p.surface_sqm?esc(p.surface_sqm)+' m² · ':'')+(p.bedrooms!==null&&p.bedrooms!==undefined?esc(p.bedrooms)+' camere · ':'')+(p.bathrooms!==null&&p.bathrooms!==undefined?esc(p.bathrooms)+' bagni':'')+'</p><section style="border-top:1px solid var(--line);padding-top:18px;margin-top:20px"><h3 style="font:400 25px Georgia,serif">Richiedi informazioni</h3><p class="help">La richiesta sarà inoltrata al team AUREN per il contatto relativo a questo annuncio.</p><form id="contactForm"><div class="form-grid"><div class="field"><label for="contactName">Nome</label><input id="contactName" maxlength="120" autocomplete="name"></div><div class="field"><label for="contactEmail">Email</label><input id="contactEmail" type="email" maxlength="254" autocomplete="email"></div><div class="field"><label for="contactPhone">Telefono</label><input id="contactPhone" type="tel" maxlength="40" autocomplete="tel"></div><div class="field full"><label for="contactMessage">Messaggio</label><textarea id="contactMessage" maxlength="2000" placeholder="Vorrei ricevere maggiori informazioni…"></textarea></div></div><p class="help">Inserisci almeno un recapito: email oppure telefono.</p><button class="btn" id="sendContact" type="submit">Invia richiesta</button></form></section>';
  openModal('detailModal');
@@ -113,10 +115,20 @@ $('listingForm').addEventListener('submit',async e=>{
  const button=$('submitListing');button.disabled=true;
  try{
   const image=safeImage($('newImage').value.trim());
+  const files=$('newFiles')?.files;
   if($('newImage').value.trim()&&!image)throw new Error('Inserisci un URL immagine HTTPS valido.');
+  if(image&&files?.length)throw new Error('Scegli le fotografie da caricare oppure un URL esterno, non entrambi.');
   const payload={owner_id:session.user.id,title:$('newTitle').value.trim(),description:$('newDescription').value.trim(),property_type:$('newType').value,listing_type:$('newPurpose').value,price:Number($('newPrice').value),city:$('newLocation').value.trim(),surface_sqm:$('newArea').value?Number($('newArea').value):null,bedrooms:$('newBeds').value?Number($('newBeds').value):null,bathrooms:$('newBaths').value?Number($('newBaths').value):null,status:'pending',image_url:image||null};
   if(!payload.title||!payload.city||!payload.description||!Number.isFinite(payload.price)||payload.price<=0)throw new Error('Controlla i campi obbligatori.');
-  const {error}=await db.from('properties').insert(payload);if(error)throw error;
+  const {data:created,error}=await db.from('properties').insert(payload).select('id').single();if(error)throw error;
+  if(files?.length){
+   const uploaded=await window.AURENStorage.uploadPropertyImages(db,created.id,files);
+   const {error:updateError}=await db.from('properties').update({image_url:uploaded[0].publicUrl}).eq('id',created.id).eq('owner_id',session.user.id);
+   if(updateError){await window.AURENStorage.removePropertyImages(db,uploaded.map(x=>x.path));throw updateError}
+   const galleryRows=uploaded.map(x=>({property_id:created.id,owner_id:session.user.id,image_url:x.publicUrl,storage_path:x.path}));
+   const {error:galleryError}=await db.from('property_images').insert(galleryRows);
+   if(galleryError)console.warn('AUREN gallery metadata:',galleryError.message);
+  }
   $('listingForm').reset();closeModal('listingModal');toast('Annuncio inviato. Sarà visibile dopo la verifica.');await loadMine();
  }catch(error){console.error('AUREN Properties submit:',error);toast(error.message||'Invio non riuscito. Riprova.')}
  finally{button.disabled=false}
