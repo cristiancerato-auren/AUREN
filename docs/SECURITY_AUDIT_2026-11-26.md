@@ -13,6 +13,7 @@ Date: 26 November 2026
 
 ## Prepared, not yet live
 - `20261126000200_auren_private_property_storage.sql` makes the image bucket private, restricts uploads to JPG/PNG/WebP up to 5 MB, and permits signed image access only to published listings or the owner/admin.
+- `20261126000300_auren_public_form_rate_limit.sql` adds database-side throttling of three Studio requests per email, phone, or authenticated user in a rolling 10-minute window, with transaction advisory locks to avoid concurrent bypass.
 - Frontend pages now create expiring signed URLs for stored images.
 - Netlify static-hosting configuration and security headers are prepared in `netlify.toml` and `_headers`.
 - The frontend Supabase SDK is pinned to `2.119.2`.
