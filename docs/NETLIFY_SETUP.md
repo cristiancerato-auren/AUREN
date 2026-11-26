@@ -27,11 +27,12 @@ Pubblicare una preview del ramo `auren-living-development` su un URL temporaneo 
 - Non modificare la sezione Domains e non inserire `aurenliving.it` in Netlify durante questo test.
 
 ## Sequenza per il futuro passaggio
-Il bucket immagini live è ancora pubblico. Prima di applicare la migrazione privata:
+Il bucket immagini live è ancora pubblico. Per evitare che il vecchio frontend perda accesso alle immagini:
 1. verificare il frontend firmato nella preview;
 2. concordare il momento di rilascio e preparare un rollback;
-3. applicare `20261126000200_auren_private_property_storage.sql` al progetto Supabase operativo;
-4. distribuire il frontend compatibile;
-5. solo dopo i test, valutare il cambio DNS con approvazione esplicita.
+3. con approvazione esplicita, pubblicare il nuovo frontend Netlify e spostare il DNS Aruba verso Netlify;
+4. verificare che il nuovo frontend sia quello effettivamente servito;
+5. solo dopo applicare `20261126000200_auren_private_property_storage.sql` al progetto Supabase operativo;
+6. verificare upload, URL firmati, immagini pubbliche solo per annunci approvati e accesso del proprietario.
 
 Non eseguire la migrazione Storage mentre il vecchio frontend pubblico è ancora quello servito ai visitatori.
