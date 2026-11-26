@@ -31,7 +31,13 @@
       notify('Non è stato possibile caricare gli annunci. Riprova più tardi.');
       return;
     }
-    listings = (data || []).map(p => ({
+    const resolved = await Promise.all((data || []).map(async p => ({
+      ...p,
+      image_url: window.AURENStorage
+        ? await window.AURENStorage.resolveImageUrl(db, p.image_url)
+        : p.image_url || ''
+    })));
+    listings = resolved.map(p => ({
       id: p.id,
       title: p.title,
       location: p.city || '',
