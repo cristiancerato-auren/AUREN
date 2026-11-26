@@ -10,7 +10,7 @@ Questo documento è un promemoria decisionale, non un ordine di acquisto. Nessun
 - Resend Free: $0/mese, fino a 3.000 email/mese e 100 email/giorno, con massimo 3 domini.
 - Stripe test mode: $0 per simulare pagamenti; non incassa denaro reale.
 - Sviluppo e test locali: nessun costo di hosting aggiuntivo se eseguiti sul computer, senza creare risorse cloud a consumo.
-- Netlify Free: $0/mese e utilizzabile per progetti commerciali; 300 crediti mensili, con sospensione del servizio Free al superamento del limite.
+- Netlify Free: $0/mese, 300 crediti mensili con limite rigido e senza ricarica automatica. Quando i crediti finiscono, le funzionalità a consumo si fermano fino al rinnovo del ciclo; nessun addebito automatico sul piano Free.
 
 ## Opzionali a pagamento — solo se li approvi
 
