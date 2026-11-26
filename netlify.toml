@@ -1,5 +1,2 @@
 [build]
   publish = "."
-
-[build.processing]
-  skip_processing = true
