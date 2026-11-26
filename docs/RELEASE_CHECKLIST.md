@@ -46,6 +46,7 @@ Questo documento separa le funzionalità preparate nel codice dalle attività ch
 ## Regole di rilascio
 
 - Il ramo di sviluppo non equivale al sito operativo.
+- GitHub Pages non è una destinazione ammessa per ospitare un’attività online o un e-commerce secondo i limiti ufficiali del servizio; prima del lancio commerciale va scelta una piattaforma hosting compatibile. Non cambiare DNS durante questa fase.
 - Non usare dati dimostrativi come annunci, prodotti, tariffe o disponibilità reali.
 - Non inserire segreti nel codice frontend o nel repository.
 - Non applicare migrazioni al database operativo, distribuire funzioni, attivare pagamenti reali o unire in `main` senza approvazione esplicita.
