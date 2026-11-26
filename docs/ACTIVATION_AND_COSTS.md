@@ -10,15 +10,17 @@ Questo documento è un promemoria decisionale, non un ordine di acquisto. Nessun
 - Resend Free: $0/mese, fino a 3.000 email/mese e 100 email/giorno, con massimo 3 domini.
 - Stripe test mode: $0 per simulare pagamenti; non incassa denaro reale.
 - Sviluppo e test locali: nessun costo di hosting aggiuntivo se eseguiti sul computer, senza creare risorse cloud a consumo.
+- Netlify Free: $0/mese e utilizzabile per progetti commerciali; 300 crediti mensili, con sospensione del servizio Free al superamento del limite.
 
 ## Opzionali a pagamento — solo se li approvi
 
 | Servizio | Costo pubblicato al 26 novembre 2026 | A cosa serve | Decisione |
 |---|---:|---|---|
+| Netlify Personal / Pro | da $9/mese / $20/mese | Crediti e funzionalità aggiuntive rispetto al Free; non necessari per iniziare se il traffico resta entro i limiti gratuiti. | NON attivato |
 | Supabase Pro | da $25/mese | Protezione password compromesse, backup giornalieri e limiti più ampi. Non è indispensabile per mantenere il codice del sito; la protezione password compromesse è una funzione aggiuntiva. | NON attivato |
 | Resend Pro | $20/mese | 50.000 email/mese e nessun limite giornaliero del piano Free. Il piano Free può bastare per iniziare con volumi ridotti. | NON attivato |
 | Stripe pagamenti reali | Nessun canone mensile standard; commissione per transazione. Per carte SEE standard: 1,5% + €0,25 per pagamento riuscito. Altre carte/metodi possono costare di più. | Incassare gli ordini Living. | Solo quando venditore, prezzi, imposte, spedizioni, resi e test saranno pronti |
-| Hosting alternativo a GitHub Pages | Da valutare: GitHub Pages è gratuito per repository pubblici, ma GitHub dichiara che non è destinato a ospitare un'attività online o un e-commerce. Cloudflare Pages offre un piano Free; prima di spostare il dominio vanno verificati i termini applicabili e l'architettura dei pagamenti. | Ospitare correttamente un sito commerciale. | NON configurato |
+| Hosting Netlify Free | $0/mese, 300 crediti mensili; se il limite viene superato il servizio Free può essere sospeso fino al mese successivo, senza addebito automatico sul piano Free. Netlify dichiara esplicitamente che il piano Free consente progetti commerciali. | Alternativa gratuita adatta al sito commerciale, entro i limiti. | NON configurato |
 | Rinnovo dominio Aruba | Importo da verificare nel pannello Aruba | Mantenere `aurenliving.it`. | Già acquistato; nessun nuovo acquisto ora |
 
 ## Attività gratuite ancora necessarie
