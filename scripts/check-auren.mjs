@@ -16,8 +16,7 @@ const files = {
   terms: read("../terms.html"),
   live: read("../assets/js/auren-live.js"),
   storage: read("../assets/js/auren-storage.js"),
-  headers: read("../_headers"),
-  admin: read("../admin.html")
+  headers: read("../_headers")
 };
 
 function checkHtmlScripts(html, filename) {
@@ -39,6 +38,8 @@ checkHtmlScripts(files.adminLiving, "admin-living.html");
 checkHtmlScripts(files.studio, "studio.html");
 checkHtmlScripts(files.journal, "journal.html");
 new vm.Script(files.live, {filename:"assets/js/auren-live.js"});
+new vm.Script(files.storage, {filename:"assets/js/auren-storage.js"});
+console.log("✓ Private storage helper JavaScript syntax");
 console.log("✓ Live Supabase integration JavaScript syntax");
 
 assert.match(files.index, /href=["']account\.html["']/i);
