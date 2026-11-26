@@ -20,7 +20,6 @@ Questo documento è un promemoria decisionale, non un ordine di acquisto. Nessun
 | Supabase Pro | da $25/mese | Protezione password compromesse, backup giornalieri e limiti più ampi. Non è indispensabile per mantenere il codice del sito; la protezione password compromesse è una funzione aggiuntiva. | NON attivato |
 | Resend Pro | $20/mese | 50.000 email/mese e nessun limite giornaliero del piano Free. Il piano Free può bastare per iniziare con volumi ridotti. | NON attivato |
 | Stripe pagamenti reali | Nessun canone mensile standard; commissione per transazione. Per carte SEE standard: 1,5% + €0,25 per pagamento riuscito. Altre carte/metodi possono costare di più. | Incassare gli ordini Living. | Solo quando venditore, prezzi, imposte, spedizioni, resi e test saranno pronti |
-| Hosting Netlify Free | $0/mese, 300 crediti mensili; se il limite viene superato il servizio Free può essere sospeso fino al mese successivo, senza addebito automatico sul piano Free. Netlify dichiara esplicitamente che il piano Free consente progetti commerciali. | Alternativa gratuita adatta al sito commerciale, entro i limiti. | NON configurato |
 | Rinnovo dominio Aruba | Importo da verificare nel pannello Aruba | Mantenere `aurenliving.it`. | Già acquistato; nessun nuovo acquisto ora |
 
 ## Attività gratuite ancora necessarie
