@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /admin.html
+Disallow: /admin-living.html
+Disallow: /account.html
+Disallow: /privacy.html
+Disallow: /terms.html
+
+Sitemap: https://aurenliving.it/sitemap.xml
