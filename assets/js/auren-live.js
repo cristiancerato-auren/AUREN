@@ -183,7 +183,12 @@
       notify('Grazie: iscrizione alla newsletter AUREN registrata.');
     } catch (error) {
       console.error('AUREN newsletter:', error.message);
-      notify('Iscrizione non riuscita. Se eri già iscritto, sei già nella lista.');
+      const detail = String(error?.message || '').toLowerCase();
+      if (detail.includes('consent_version') || detail.includes('schema cache')) {
+        notify('Newsletter in attivazione: il database deve ancora essere aggiornato. Nessuna iscrizione è stata registrata.');
+      } else {
+        notify('Iscrizione non riuscita. Se eri già iscritto, sei già nella lista.');
+      }
     } finally {
       button.disabled = false;
     }
@@ -201,7 +206,11 @@
       const article = button.closest('.service-card');
       if (article) {
         const priceEl = article.querySelector('.service-price');
-        if (priceEl) priceEl.innerHTML = '€ ' + Number(service.price).toLocaleString('it-IT') + ' <small>/ da</small>';
+        if (priceEl) {
+        const suffix = document.createElement('small');
+        suffix.textContent = ' / da';
+        priceEl.replaceChildren(document.createTextNode('€ ' + Number(service.price).toLocaleString('it-IT')), suffix);
+      }
       }
     });
   }
