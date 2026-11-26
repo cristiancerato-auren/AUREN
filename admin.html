@@ -21,6 +21,7 @@
 </section>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/js/auren-storage.js"></script>
 <script>
 (() => {
 const db=window.supabase.createClient('https://upcgbbwwghaazsqfbwri.supabase.co','sb_publishable_SrxxuVdqu0TqBEhkfxIO1Q_Xdi834aQ');
@@ -37,10 +38,11 @@ async function init(){
  await Promise.all([loadProperties(),loadRequests(),loadServices()]);
 }
 async function loadProperties(){
- const root=$('properties');const {data,error}=await db.from('properties').select('id,title,city,price,listing_type,status,created_at,owner_id').eq('status','pending').order('created_at',{ascending:false});
+ const root=$('properties');const {data,error}=await db.from('properties').select('id,title,city,price,listing_type,status,created_at,owner_id,image_url').eq('status','pending').order('created_at',{ascending:false});
  if(error){root.textContent='Impossibile caricare gli annunci.';console.error(error);return}
  if(!data?.length){root.textContent='Nessun annuncio in attesa.';return}
- root.innerHTML=data.map(p=>'<div class="item"><div><h3>'+esc(p.title)+'</h3><div>'+esc(p.city)+' · '+esc(p.listing_type)+' · €'+Number(p.price).toLocaleString('it-IT')+'</div><small class="muted">ID: '+esc(p.id)+'</small></div><div class="actions"><button data-publish="'+esc(p.id)+'">Approva</button><button class="danger" data-reject="'+esc(p.id)+'">Rifiuta</button></div></div>').join('');
+ const rows=await Promise.all(data.map(async p=>({...p,preview:await window.AURENStorage.resolveImageUrl(db,p.image_url)})));
+ root.innerHTML=rows.map(p=>'<div class="item"><div>'+(p.preview?'<img src="'+esc(p.preview)+'" alt="Anteprima '+esc(p.title)+'" loading="lazy" style="width:120px;height:82px;object-fit:cover;border-radius:8px;margin-bottom:8px">':'')+'<h3>'+esc(p.title)+'</h3><div>'+esc(p.city)+' · '+esc(p.listing_type)+' · €'+Number(p.price).toLocaleString('it-IT')+'</div><small class="muted">ID: '+esc(p.id)+'</small></div><div class="actions"><button data-publish="'+esc(p.id)+'">Approva</button><button class="danger" data-reject="'+esc(p.id)+'">Rifiuta</button></div></div>').join('');
  root.querySelectorAll('[data-publish]').forEach(b=>b.onclick=()=>setProperty(b.dataset.publish,'published'));
  root.querySelectorAll('[data-reject]').forEach(b=>b.onclick=()=>setProperty(b.dataset.reject,'rejected'));
 }
