@@ -20,7 +20,7 @@
 <div class="panel"><h2>Listino servizi</h2><p class="muted">Aggiungi i servizi e modifica prezzo, descrizione e disponibilità. I prezzi diventano visibili sulle pagine AUREN collegate al catalogo.</p><form id="newServiceForm" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:16px 0"><input id="newServiceName" required maxlength="100" placeholder="Nome servizio" aria-label="Nome servizio"><input id="newServicePrice" required type="number" min="0" step="1" placeholder="Prezzo in euro" aria-label="Prezzo in euro"><input id="newServiceDescription" maxlength="500" placeholder="Descrizione" aria-label="Descrizione" style="grid-column:1/-1"><button type="submit" style="justify-self:start">Aggiungi servizio</button></form><div id="services"></div></div>
 </section>
 </main>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.2"></script>
 <script src="assets/js/auren-storage.js"></script>
 <script>
 (() => {
