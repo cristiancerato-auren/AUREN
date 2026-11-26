@@ -14,7 +14,10 @@ const files = {
   journal: read("../journal.html"),
   privacy: read("../privacy.html"),
   terms: read("../terms.html"),
-  live: read("../assets/js/auren-live.js")
+  live: read("../assets/js/auren-live.js"),
+  storage: read("../assets/js/auren-storage.js"),
+  headers: read("../_headers"),
+  admin: read("../admin.html")
 };
 
 function checkHtmlScripts(html, filename) {
@@ -48,6 +51,21 @@ assert.match(files.properties, /from\(\x27properties\x27\)/, "Properties portal 
 assert.match(files.properties, /from\(\x27service_requests\x27\)/, "Property inquiries must be stored as service requests");
 assert.match(files.properties, /status:\x27pending\x27/, "New property listings must enter moderation as pending");
 assert.match(files.properties, /safeImage/, "Property image URLs must be HTTPS validated");
+assert.match(files.properties, /AURENStorage\.resolveImageUrl/, "Property images must use short-lived signed URLs from private storage");
+assert.match(files.properties, /id="newFiles" type="file"/, "Properties must support controlled image uploads");
+assert.match(files.admin, /AURENStorage\.resolveImageUrl/, "Admin moderation must preview images through signed URLs");
+assert.match(files.live, /AURENStorage\.resolveImageUrl/, "Homepage listings must resolve private property images");
+const privateStorageMigration = read("../supabase/migrations/20261126000200_auren_private_property_storage.sql");
+assert.match(privateStorageMigration, /set public = false/i, "Property image bucket must be private");
+assert.match(privateStorageMigration, /file_size_limit = 5242880/i, "Storage must enforce a 5 MB server-side file limit");
+assert.match(privateStorageMigration, /allowed_mime_types = array\['image\/jpeg','image\/png','image\/webp'\]/i, "Storage must restrict image types");
+assert.match(privateStorageMigration, /p\.status = 'published'/i, "Anonymous image access must be limited to published properties");
+assert.match(privateStorageMigration, /p\.status = 'pending'/i, "Image uploads must be limited to pending owner properties");
+assert.match(files.storage, /createSignedUrl/, "Private property images must use expiring signed URLs");
+assert.match(files.storage, /storage\.from\(BUCKET\)\.remove/, "Failed multi-image uploads must clean up already uploaded files");
+assert.match(files.headers, /Content-Security-Policy:/, "Static hosting must set a Content Security Policy");
+assert.match(files.headers, /X-Content-Type-Options: nosniff/, "Static hosting must disable MIME sniffing");
+
 assert.match(files.live, /from\('properties'\)/);
 assert.match(files.live, /from\('service_requests'\)/);
 assert.match(files.live, /from\('newsletter_subscribers'\)/);
