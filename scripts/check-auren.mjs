@@ -77,6 +77,8 @@ assert.match(files.index, /id="newsletterConsent"[^>]*required/, "Homepage newsl
 assert.match(files.live, /consent_version:\s*'2026-11-24'/, "Homepage newsletter must persist the consent version required by the database");
 assert.match(files.account, /signInWithPassword/);
 assert.match(files.account, /signUp/);
+assert.match(files.account, /minLength=login\?1:12/, "New account passwords must be at least 12 characters without blocking existing logins");
+assert.match(files.account, /passwordHint/, "Account page must explain password length requirements");
 assert.match(files.account, /from\('living_orders'\)/, "Account must load customer orders through Supabase RLS");
 assert.match(files.account, /from\('living_order_items'\)/, "Account must load order line items through Supabase RLS");
 assert.match(files.account, /ordersPanel/, "Account must render the order history panel");
