@@ -40,3 +40,9 @@ Questo documento è un promemoria decisionale, non un ordine di acquisto. Nessun
 - Nessuna modifica DNS o merge in `main` eseguito.
 
 I prezzi possono cambiare; ricontrollarli nelle pagine ufficiali prima di una decisione.
+
+
+## Riferimenti ufficiali consultati
+- [Netlify Free plan — prezzi e limiti](https://www.netlify.com/pricing/)
+- [Netlify Free plan — progetti commerciali consentiti](https://www.netlify.com/blog/introducing-netlify-free-plan/)
+- [Netlify — dettagli sui crediti e limite rigido del piano Free](https://docs.netlify.com/manage/accounts-and-billing/billing/billing-for-credit-based-plans/credit-based-pricing-plans/)
