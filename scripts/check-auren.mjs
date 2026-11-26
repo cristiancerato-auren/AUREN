@@ -67,6 +67,8 @@ assert.match(files.storage, /createSignedUrl/, "Private property images must use
 assert.match(files.storage, /storage\.from\(BUCKET\)\.remove/, "Failed multi-image uploads must clean up already uploaded files");
 assert.match(files.headers, /Content-Security-Policy:/, "Static hosting must set a Content Security Policy");
 assert.match(files.headers, /X-Content-Type-Options: nosniff/, "Static hosting must disable MIME sniffing");
+assert.match(files.headers, /\/admin-living\.html[\s\S]*?Cache-Control: no-store/, "Admin pages must not be cached by the static host");
+assert.match(files.headers, /X-Robots-Tag: noindex, nofollow/, "Private and draft pages must not be indexed");
 
 assert.match(files.live, /from\('properties'\)/);
 assert.match(files.live, /from\('service_requests'\)/);
