@@ -61,6 +61,9 @@ function renderCart(){const root=$('cartLines'),items=Object.entries(cart).map((
 async function startCheckout(ev){
  ev.preventDefault();
  const status=$('checkoutStatus'),button=$('checkoutSubmit');
+ // Server-side checkout is intentionally unavailable until payment, shipping and order handling are tested.
+ const CHECKOUT_ENABLED = false;
+ if(!CHECKOUT_ENABLED){status.textContent='Il checkout non è ancora attivo. Nessun dato è stato inviato e nessun pagamento può essere avviato.';button.disabled=true;button.setAttribute('aria-disabled','true');button.textContent='Acquisti online in apertura';return;}
  const entries=Object.fromEntries(new FormData(ev.currentTarget).entries());
  if(!Object.keys(cart).length){status.textContent='Il carrello è vuoto.';return}
  const address={line1:entries.address,postal_code:entries.postal_code,city:entries.city,province:entries.province,country:entries.country};
