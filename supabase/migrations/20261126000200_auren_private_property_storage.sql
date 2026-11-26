@@ -23,8 +23,15 @@ using (
   and exists (
     select 1 from public.properties p
     where p.owner_id::text = (storage.foldername(name))[1]
-      and p.id::text = (storage.foldername(name))[2]
       and p.status = 'published'
+      and (
+        p.id::text = (storage.foldername(name))[2]
+        or p.image_url like '%/storage/v1/object/public/property-images/' || name
+        or exists (
+          select 1 from public.property_images pi
+          where pi.property_id = p.id and pi.storage_path = name
+        )
+      )
   )
 );
 
@@ -35,8 +42,16 @@ using (
   and (storage.foldername(name))[1] = (select auth.uid())::text
   and exists (
     select 1 from public.properties p
-    where p.id::text = (storage.foldername(name))[2]
-      and p.owner_id = (select auth.uid())
+    where p.owner_id = (select auth.uid())
+      and (
+        p.id::text = (storage.foldername(name))[2]
+        or p.image_url like '%/storage/v1/object/public/property-images/' || name
+        or exists (
+          select 1 from public.property_images pi
+          where pi.property_id = p.id and pi.owner_id = (select auth.uid())
+            and pi.storage_path = name
+        )
+      )
   )
 );
 
