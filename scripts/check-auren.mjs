@@ -57,6 +57,11 @@ assert.match(files.account, /from\('living_order_items'\)/, "Account must load o
 assert.match(files.account, /ordersPanel/, "Account must render the order history panel");
 assert.match(files.admin, /account_type/);
 const portalSecurityMigration = read("../supabase/migrations/20261124000200_auren_portal_security_hardening.sql");
+const liveSecurityMigration = read("../supabase/migrations/20261126000100_auren_live_security_least_privilege.sql");
+assert.match(liveSecurityMigration, /revoke truncate, references, trigger, maintain/i, "Public roles must not retain destructive or trigger-level table privileges");
+assert.match(liveSecurityMigration, /grant update \(full_name, phone\) on table public\.profiles to authenticated/i, "Profile edits must be limited to non-privileged fields");
+assert.match(liveSecurityMigration, /status = 'pending'/, "Public service requests must enter moderation");
+assert.match(liveSecurityMigration, /s\.active = true/, "Public requests may only reference active Studio services");
 assert.match(portalSecurityMigration, /revoke update on public\.profiles from public, anon, authenticated/i, "Users must not be able to update their own admin role");
 assert.match(portalSecurityMigration, /grant update \(full_name, phone\) on public\.profiles to authenticated/i, "Profile updates must be limited to safe contact fields");
 assert.match(portalSecurityMigration, /status = 'pending'/, "Public service requests must enter moderation as pending");
