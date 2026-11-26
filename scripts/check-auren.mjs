@@ -179,6 +179,8 @@ assert.match(checkoutSource, /p_checkout_attempt_id: checkoutAttemptId/, "Databa
 assert.match(checkoutSource, /p_request_hash: requestHash/, "Database reservation must bind retries to the same request payload");
 assert.match(checkoutSource, /outcome is unknown; reservation retained for safe retry/, "Ambiguous Stripe network outcomes must not release stock");
 assert.match(files.living, /aurenLivingCheckoutAttempt/, "Storefront must persist the checkout attempt ID across retry attempts");
+assert.match(files.living, /id="checkoutSubmit"[^>]*disabled/, "Living checkout must remain disabled until payment, shipping and server functions are configured");
+assert.match(files.living, /Il checkout non è ancora attivo/, "Living must clearly disclose that online orders are not yet active");
 assert.match(files.living, /name="country"[^>]*list="countryOptions"/, "Worldwide checkout must offer country suggestions");
 assert.match(files.living, /<datalist id="countryOptions">/, "Checkout country suggestions must be available to customers");
 
