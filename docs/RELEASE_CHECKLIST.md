@@ -8,7 +8,7 @@ Questo documento separa le funzionalità preparate nel codice dalle attività ch
 - [x] Properties: ricerca, schede, account, invio annunci in moderazione e area admin.
 - [x] Living: catalogo, carrello, varianti, checkout Stripe predisposto, area ordini e pannello catalogo.
 - [x] Studio: catalogo dinamico collegato ai servizi attivi e ai prezzi gestiti dall'admin; richieste collegate all'ID del servizio e con email o telefono.
-- [x] Journal: pagina editoriale e iscrizione newsletter con consenso esplicito; migrazione dedicata per registrare versione del consenso e timestamp server.
+- [x] Journal: pagina editoriale e interfaccia newsletter con consenso esplicito; la migrazione per registrare versione e timestamp del consenso è preparata ma NON applicata al database operativo. L’iscrizione resta quindi da attivare dopo la migrazione approvata.
 - [x] Account cliente e pannelli amministrativi separati.
 - [x] Privacy e condizioni presenti come bozze, non pubblicabili come documenti definitivi.
 
@@ -17,15 +17,15 @@ Questo documento separa le funzionalità preparate nel codice dalle attività ch
 - [x] Pipeline GitHub Actions superata: controlli statici HTML/JavaScript e type-check delle Edge Functions (commit `02d2c82`).
 - [ ] Testare registrazione, login, logout, recupero password e protezione delle password compromesse. Il controllo password compromesse risulta ancora disattivato nel progetto Supabase.
 - [ ] Testare Properties con account privato, account agenzia, utente non autenticato e amministratore.
-- [ ] Verificare upload, dimensione, tipo e accesso alle immagini; controllare che un utente non possa modificare annunci altrui.
-- [ ] Applicare in staging la migrazione `20261124000100_auren_journal_consent.sql` e verificare che ogni nuova iscrizione registri la versione del consenso e il timestamp server.
-- [ ] Testare richieste Studio e newsletter da anonimo e da utente autenticato; verificare anti-spam, duplicati e gestione richieste.
+- [ ] Verificare upload, dimensione, tipo e accesso alle immagini; il bucket `property-images` è attualmente pubblico, quindi definire e testare la strategia per non esporre fotografie di annunci non approvati prima di accettare upload reali.
+- [ ] Il database operativo non contiene ancora `consent_version` e `consent_at`: applicare la migrazione `20261124000100_auren_journal_consent.sql` solo dopo backup e approvazione; poi testare la registrazione del consenso. Non creare un branch Supabase a pagamento per lo staging.
+- [ ] Testare richieste Studio da anonimo e autenticato; verificare anti-spam e gestione richieste. La newsletter resta sospesa finché la migrazione del consenso non è approvata e applicata.
 - [ ] Popolare il catalogo Living con prodotti, fotografie, varianti, prezzi, SKU e disponibilità reali.
 - [ ] Popolare il catalogo Studio con nomi, descrizioni e prezzi approvati dal titolare.
 - [x] Preparata migrazione di hardening per impedire l'auto-promozione del profilo ad admin e limitare le richieste pubbliche ai servizi attivi.
 - [ ] Applicare e collaudare le migrazioni di consenso e hardening in un progetto Supabase isolato.
 - [ ] Testare tutte le policy RLS con utenti distinti e ruolo admin.
-- [ ] Eseguire le migrazioni Living su un ambiente isolato, mai direttamente sul database operativo.
+- [ ] Eseguire le migrazioni Living in un ambiente di test locale o separato e gratuito, se disponibile; mai direttamente sul database operativo. Nessun branch Supabase a pagamento.
 - [ ] Configurare Stripe in modalità test, verificare webhook, importi, annullamenti, scadenze, retry e rimborsi.
 - [ ] Configurare Resend e collaudare email ordine/spedizione su dominio verificato.
 - [ ] Definire tariffe, zone, corrieri e tempi di consegna.
