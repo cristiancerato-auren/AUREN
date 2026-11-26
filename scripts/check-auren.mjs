@@ -44,6 +44,7 @@ console.log("✓ Live Supabase integration JavaScript syntax");
 
 assert.match(files.index, /href=["']account\.html["']/i);
 assert.match(files.index, /assets\/js\/auren-live\.js/);
+assert.match(files.index, /@supabase\/supabase-js@2\.119\.2/, "Supabase browser SDK must be pinned to a reviewed version");
 assert.match(files.index, /properties\.html/, "Homepage must link to the standalone Properties portal");
 assert.match(files.index, /href="properties\.html"[^>]*data-i18n="postBtn"/, "Homepage publish CTA must lead to the real Properties portal");
 assert.doesNotMatch(files.index, /id="listingForm"/, "Homepage must not present the browser-only demo listing form");
