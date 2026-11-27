@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="it">
 <head>
+<meta name="robots" content="noindex,nofollow">
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#f4efe7"><title>Admin | AUREN</title>
 <style>
@@ -9,7 +10,7 @@
 </style>
 </head>
 <body>
-<header><strong>AUREN</strong><div><a href="./">Homepage</a> &nbsp; <button class="secondary" id="logout">Esci</button></div></header>
+<header><strong>AUREN</strong><div><a href="./">Homepage</a> &nbsp; <a href="properties.html">Portale Properties</a> &nbsp; <a href="admin-living.html">Gestione Living</a> &nbsp; <a href="admin-design.html">Visual Editor</a> &nbsp; <button class="secondary" id="logout">Esci</button></div></header>
 <main>
 <h1 style="font:40px Georgia,serif;font-weight:400">Area amministrazione</h1>
 <p class="muted">Moderazione degli annunci, gestione delle richieste e listino servizi. Accesso riservato agli account autorizzati AUREN.</p>
@@ -17,10 +18,11 @@
 <section id="dashboard" class="hidden">
 <div class="panel"><h2>Annunci in attesa</h2><p class="muted">Approva un annuncio per renderlo visibile pubblicamente.</p><div id="properties"></div></div>
 <div class="panel"><h2>Richieste dei clienti</h2><p class="muted">Queste informazioni sono visibili solo agli amministratori.</p><div id="requests"></div></div>
-<div class="panel"><h2>Listino servizi</h2><p class="muted">Modifica il prezzo in euro e salva. I servizi possono essere attivati o disattivati.</p><div id="services"></div></div>
+<div class="panel"><h2>Listino servizi</h2><p class="muted">Aggiungi i servizi e modifica prezzo, descrizione e disponibilità. I prezzi diventano visibili sulle pagine AUREN collegate al catalogo.</p><form id="newServiceForm" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:16px 0"><input id="newServiceName" required maxlength="100" placeholder="Nome servizio" aria-label="Nome servizio"><input id="newServicePrice" required type="number" min="0" step="1" placeholder="Prezzo in euro" aria-label="Prezzo in euro"><input id="newServiceDescription" maxlength="500" placeholder="Descrizione" aria-label="Descrizione" style="grid-column:1/-1"><button type="submit" style="justify-self:start">Aggiungi servizio</button></form><div id="services"></div></div>
 </section>
 </main>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.2"></script>
+<script src="assets/js/auren-storage.js"></script>
 <script>
 (() => {
 const db=window.supabase.createClient('https://upcgbbwwghaazsqfbwri.supabase.co','sb_publishable_SrxxuVdqu0TqBEhkfxIO1Q_Xdi834aQ');
@@ -37,10 +39,11 @@ async function init(){
  await Promise.all([loadProperties(),loadRequests(),loadServices()]);
 }
 async function loadProperties(){
- const root=$('properties');const {data,error}=await db.from('properties').select('id,title,city,price,listing_type,status,created_at,owner_id').eq('status','pending').order('created_at',{ascending:false});
+ const root=$('properties');const {data,error}=await db.from('properties').select('id,title,city,price,listing_type,status,created_at,owner_id,image_url').eq('status','pending').order('created_at',{ascending:false});
  if(error){root.textContent='Impossibile caricare gli annunci.';console.error(error);return}
  if(!data?.length){root.textContent='Nessun annuncio in attesa.';return}
- root.innerHTML=data.map(p=>'<div class="item"><div><h3>'+esc(p.title)+'</h3><div>'+esc(p.city)+' · '+esc(p.listing_type)+' · €'+Number(p.price).toLocaleString('it-IT')+'</div><small class="muted">ID: '+esc(p.id)+'</small></div><div class="actions"><button data-publish="'+esc(p.id)+'">Approva</button><button class="danger" data-reject="'+esc(p.id)+'">Rifiuta</button></div></div>').join('');
+ const rows=await Promise.all(data.map(async p=>({...p,preview:await window.AURENStorage.resolveImageUrl(db,p.image_url)})));
+ root.innerHTML=rows.map(p=>'<div class="item"><div>'+(p.preview?'<img src="'+esc(p.preview)+'" alt="Anteprima '+esc(p.title)+'" loading="lazy" style="width:120px;height:82px;object-fit:cover;border-radius:8px;margin-bottom:8px">':'')+'<h3>'+esc(p.title)+'</h3><div>'+esc(p.city)+' · '+esc(p.listing_type)+' · €'+Number(p.price).toLocaleString('it-IT')+'</div><small class="muted">ID: '+esc(p.id)+'</small></div><div class="actions"><button data-publish="'+esc(p.id)+'">Approva</button><button class="danger" data-reject="'+esc(p.id)+'">Rifiuta</button></div></div>').join('');
  root.querySelectorAll('[data-publish]').forEach(b=>b.onclick=()=>setProperty(b.dataset.publish,'published'));
  root.querySelectorAll('[data-reject]').forEach(b=>b.onclick=()=>setProperty(b.dataset.reject,'rejected'));
 }
@@ -56,10 +59,11 @@ async function loadRequests(){
  root.innerHTML=data.map(r=>'<div class="item"><div><h3>'+esc((r.notes||'Richiesta cliente').split('\n').find(x=>x.startsWith('Servizio:'))||'Richiesta cliente')+'</h3><div>'+esc(r.contact_email||'')+' '+esc(r.contact_phone||'')+'</div><p>'+esc(r.notes||'')+'</p><span class="badge">'+esc(r.status)+'</span></div><div class="actions"><select aria-label="Stato richiesta" data-request="'+esc(r.id)+'"><option value="pending" '+(r.status==='pending'?'selected':'')+'>In attesa</option><option value="in_progress" '+(r.status==='in_progress'?'selected':'')+'>In lavorazione</option><option value="completed" '+(r.status==='completed'?'selected':'')+'>Completata</option><option value="cancelled" '+(r.status==='cancelled'?'selected':'')+'>Annullata</option></select><button data-save-request="'+esc(r.id)+'">Salva</button></div></div>').join('');
  root.querySelectorAll('[data-save-request]').forEach(b=>b.onclick=async()=>{const id=b.dataset.saveRequest;const value=root.querySelector('[data-request="'+id+'"]').value;const {error}=await db.from('service_requests').update({status:value}).eq('id',id);if(error){status('Non è stato possibile aggiornare la richiesta.');console.error(error)}else{status('Stato richiesta aggiornato.');await loadRequests()}});
 }
+$('newServiceForm').addEventListener('submit',async event=>{event.preventDefault();const name=$('newServiceName').value.trim();const price=Number($('newServicePrice').value);const description=$('newServiceDescription').value.trim();if(!name||!Number.isFinite(price)||price<0){status('Inserisci nome e prezzo validi.');return}const {error}=await db.from('services').insert({name,description,price,active:true});if(error){status('Creazione non riuscita: verifica le autorizzazioni o un eventuale servizio già presente.');console.error(error);return}$('newServiceForm').reset();status('Servizio aggiunto al listino.');await loadServices()});
 async function loadServices(){
  const root=$('services');const {data,error}=await db.from('services').select('id,name,description,price,active').order('name');
  if(error){root.textContent='Impossibile caricare il listino.';console.error(error);return}
- if(!data?.length){root.textContent='Nessun servizio configurato.';return}
+ if(!data?.length){root.textContent='Nessun servizio configurato. Aggiungi il primo servizio dal modulo qui sopra.';return}
  root.innerHTML=data.map(s=>'<div class="item"><div><h3>'+esc(s.name)+'</h3><div class="muted">'+esc(s.description||'')+'</div><label><input type="checkbox" data-active="'+esc(s.id)+'" '+(s.active?'checked':'')+'> Attivo</label></div><div><input class="price-edit" type="number" min="0" step="1" value="'+Number(s.price)+'" aria-label="Prezzo '+esc(s.name)+'" data-price="'+esc(s.id)+'"><button data-save-service="'+esc(s.id)+'">Salva</button></div></div>').join('');
  root.querySelectorAll('[data-save-service]').forEach(b=>b.onclick=async()=>{const id=b.dataset.saveService;const price=Number(root.querySelector('[data-price="'+id+'"]').value);const active=root.querySelector('[data-active="'+id+'"]').checked;if(!Number.isFinite(price)||price<0){status('Inserisci un prezzo valido.');return}const {error}=await db.from('services').update({price,active}).eq('id',id);if(error){status('Modifica non riuscita: verifica le autorizzazioni admin.');console.error(error)}else status('Listino aggiornato.')});
 }

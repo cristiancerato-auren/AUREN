@@ -1,0 +1,8 @@
+[functions.create-living-checkout]
+verify_jwt = false
+
+[functions.stripe-living-webhook]
+verify_jwt = false
+
+[functions.send-living-order-email]
+verify_jwt = true

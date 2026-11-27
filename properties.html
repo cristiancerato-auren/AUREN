@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#f4eee7">
+<meta name="description" content="AUREN Properties: cerca immobili, consulta annunci e gestisci le tue pubblicazioni.">
+<title>AUREN Properties — Portale immobiliare</title>
+<style>
+:root{--cream:#f4eee7;--paper:#fffdf9;--ink:#29221e;--brown:#79563f;--muted:#756a60;--line:#ded2c5;--sand:#e9ddd0}
+*{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--ink);font:15px/1.55 'DM Sans',Arial,sans-serif}a{color:inherit;text-decoration:none}button,input,select,textarea{font:inherit}button{cursor:pointer}.wrap{width:min(1180px,calc(100% - 40px));margin:auto}
+header{position:sticky;top:0;z-index:10;background:#f4eee7ed;border-bottom:1px solid var(--line);backdrop-filter:blur(12px)}.nav{height:78px;display:flex;align-items:center;justify-content:space-between;gap:20px}.brand{font:30px Georgia,serif;letter-spacing:.2em}.brand small{display:block;font:700 9px Arial,sans-serif;letter-spacing:.25em;margin-top:3px}.links{display:flex;gap:22px;font-size:12px;letter-spacing:.08em;text-transform:uppercase}.links a:hover{color:var(--brown)}.nav-actions{display:flex;gap:10px;align-items:center}.btn{border:1px solid var(--brown);background:var(--brown);color:white;padding:11px 17px;border-radius:2px;font-size:12px;font-weight:700}.btn.ghost{background:transparent;color:var(--brown)}.btn:disabled{opacity:.55;cursor:wait}
+.hero{padding:64px 0 42px;display:grid;grid-template-columns:1.05fr .95fr;gap:44px;align-items:center}.eyebrow{font-size:10px;letter-spacing:.25em;text-transform:uppercase;color:var(--brown);font-weight:800}.hero h1{font:400 clamp(44px,6vw,72px)/1.03 Georgia,serif;letter-spacing:-1.8px;margin:18px 0}.hero h1 em{color:var(--brown);font-weight:400}.hero p{max-width:520px;color:var(--muted);line-height:1.8}.hero-art{height:350px;background:#dfd0c1 url('https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1200&q=85') center/cover no-repeat;border-radius:2px 75px 2px 2px}
+.search{background:var(--paper);border:1px solid var(--line);padding:18px;display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr auto;gap:12px;align-items:end;margin:0 0 36px}.field label{display:block;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:800;margin:0 0 7px}.field input,.field select,.field textarea{width:100%;border:1px solid var(--line);background:white;color:var(--ink);padding:12px;min-height:44px;border-radius:1px;outline-color:var(--brown)}.section-head{display:flex;align-items:end;justify-content:space-between;gap:18px;margin:48px 0 20px}.section-head h2{font:400 38px Georgia,serif;margin:7px 0 0}.muted{color:var(--muted)}.count{font-size:12px;color:var(--muted)}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;padding-bottom:60px}.card{background:var(--paper);border:1px solid var(--line);min-width:0}.image{height:225px;background:var(--sand);position:relative}.image img{width:100%;height:100%;object-fit:cover;display:block}.tag{position:absolute;top:12px;left:12px;background:var(--paper);padding:6px 10px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;font-weight:800}.card-body{padding:18px}.place{font-size:10px;text-transform:uppercase;letter-spacing:.13em;color:var(--muted)}.card h3{font:400 24px/1.2 Georgia,serif;margin:8px 0 12px}.facts{display:flex;gap:14px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:13px;color:var(--muted);font-size:12px}.price-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding-top:14px}.price{font-size:18px;font-weight:800}.detail{border:0;background:transparent;color:var(--brown);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--brown);padding:5px 0}.empty{grid-column:1/-1;padding:45px;text-align:center;border:1px dashed var(--line);color:var(--muted)}
+.panel{background:var(--paper);border:1px solid var(--line);padding:24px;margin:30px 0 70px}.panel h2{font:400 32px Georgia,serif;margin:0 0 6px}.panel-head{display:flex;justify-content:space-between;align-items:start;gap:15px}.my-list{display:grid;gap:10px;margin-top:20px}.my-item{border-top:1px solid var(--line);padding:14px 0;display:flex;justify-content:space-between;align-items:center;gap:12px}.status{display:inline-block;background:var(--sand);padding:4px 8px;font-size:10px;text-transform:uppercase;letter-spacing:.08em}.modal{position:fixed;inset:0;background:#211b17b8;display:none;align-items:center;justify-content:center;padding:18px;z-index:30}.modal.open{display:flex}.dialog{width:min(760px,100%);max-height:92vh;overflow:auto;background:var(--paper);padding:26px}.dialog-head{display:flex;justify-content:space-between;gap:15px;align-items:start}.dialog h2{font:400 34px Georgia,serif;margin:5px 0 18px}.close{border:0;background:none;font-size:28px;color:var(--ink)}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}.form-grid .full{grid-column:1/-1}.form-grid textarea{min-height:110px;resize:vertical}.help{font-size:11px;color:var(--muted);margin:12px 0}.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:white;padding:13px 18px;z-index:50;display:none;max-width:90vw}.detail-image{width:100%;max-height:340px;object-fit:cover;background:var(--sand)}footer{background:#e9ddd0;padding:26px 0;color:var(--muted);font-size:11px}.foot{display:flex;justify-content:space-between;gap:15px;flex-wrap:wrap}
+@media(max-width:850px){.links{gap:12px}.search{grid-template-columns:repeat(2,1fr)}.search .btn{grid-column:1/-1}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.hero{gap:25px}.hero-art{height:300px}}
+@media(max-width:600px){.wrap{width:calc(100% - 30px)}.nav{height:auto;padding:15px 0;align-items:flex-start;flex-direction:column}.links{flex-wrap:wrap}.nav-actions{width:100%;justify-content:space-between}.hero{grid-template-columns:1fr;padding:45px 0 28px}.hero-art{height:240px}.search{grid-template-columns:1fr}.search .btn{grid-column:auto}.grid{grid-template-columns:1fr}.section-head{align-items:start;flex-direction:column}.form-grid{grid-template-columns:1fr}.form-grid .full{grid-column:auto}.my-item{align-items:flex-start;flex-direction:column}.panel{padding:18px}}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.2"></script>
+<script src="assets/js/auren-storage.js"></script>
+</head>
+<body>
+<header><div class="wrap nav"><a class="brand" href="index.html">AUREN<small>PROPERTIES</small></a><nav class="links" aria-label="Navigazione"><a href="index.html">AUREN</a><a href="living.html">Living</a><a href="journal.html">Journal</a><a href="index.html#studio">Studio</a></nav><div class="nav-actions"><a class="btn ghost" id="accountLink" href="account.html">Accedi</a><button class="btn" id="publishBtn" type="button">Pubblica immobile</button></div></div></header>
+<main class="wrap">
+<section class="hero"><div><div class="eyebrow">Il portale immobiliare AUREN</div><h1>Trova il tuo prossimo <em>spazio.</em></h1><p>Esplora immobili selezionati, confronta le opportunità e gestisci i tuoi annunci in un unico ambiente. Per privati e professionisti.</p><a class="btn" href="#annunci">Esplora gli immobili</a></div><div class="hero-art" role="img" aria-label="Interno di una residenza contemporanea"></div></section>
+<form class="search" id="searchForm">
+<div class="field"><label for="q">Località</label><input id="q" placeholder="Città o zona" autocomplete="address-level2"></div>
+<div class="field"><label for="purpose">Contratto</label><select id="purpose"><option value="">Vendita e affitto</option><option value="sale">Vendita</option><option value="rent">Affitto</option></select></div>
+<div class="field"><label for="type">Tipologia</label><select id="type"><option value="">Tutte le tipologie</option><option>Appartamento</option><option>Villa</option><option>Casa indipendente</option><option>Attico</option><option>Ufficio</option><option>Negozio</option><option>Terreno</option><option>Altro</option></select></div>
+<div class="field"><label for="maxPrice">Prezzo massimo (€)</label><input id="maxPrice" type="number" min="0" step="1000" placeholder="Nessun limite"></div>
+<button class="btn" type="submit">Cerca</button>
+</form>
+<section id="annunci"><div class="section-head"><div><div class="eyebrow">AUREN Properties</div><h2>Immobili disponibili</h2></div><div class="count" id="resultCount" aria-live="polite">Caricamento annunci…</div></div><div class="grid" id="listings" aria-live="polite"><div class="empty">Caricamento annunci…</div></div></section>
+<section class="panel" id="myProperties" hidden><div class="panel-head"><div><div class="eyebrow">Area riservata</div><h2>I miei immobili</h2><p class="muted">Consulta lo stato dei tuoi annunci inviati ad AUREN.</p></div><button class="btn ghost" id="refreshMine" type="button">Aggiorna</button></div><div class="my-list" id="mineList"></div></section>
+<section class="panel"><div class="eyebrow">Per proprietari e professionisti</div><h2>Pubblica il tuo immobile</h2><p class="muted">Crea un account gratuito e invia il tuo annuncio. Ogni nuova pubblicazione viene verificata prima di diventare visibile sul portale.</p><button class="btn" id="publishBtn2" type="button">Inizia la pubblicazione</button></section>
+</main>
+<footer><div class="wrap foot"><span>© AUREN Properties</span><span><a href="privacy.html">Privacy</a> · <a href="terms.html">Condizioni</a> · <a href="index.html">Homepage AUREN</a></span></div></footer>
+<div class="modal" id="listingModal" role="dialog" aria-modal="true" aria-labelledby="listingHeading"><div class="dialog"><div class="dialog-head"><div><div class="eyebrow">Nuovo annuncio</div><h2 id="listingHeading">Pubblica un immobile</h2></div><button class="close" id="closeListing" type="button" aria-label="Chiudi">×</button></div><form id="listingForm"><div class="form-grid">
+<div class="field full"><label for="newTitle">Titolo annuncio</label><input id="newTitle" maxlength="120" required placeholder="Es. Appartamento luminoso in centro"></div>
+<div class="field"><label for="newType">Tipologia</label><select id="newType" required><option value="">Seleziona</option><option>Appartamento</option><option>Villa</option><option>Casa indipendente</option><option>Attico</option><option>Ufficio</option><option>Negozio</option><option>Terreno</option><option>Altro</option></select></div>
+<div class="field"><label for="newPurpose">Contratto</label><select id="newPurpose" required><option value="sale">Vendita</option><option value="rent">Affitto</option></select></div>
+<div class="field"><label for="newPrice">Prezzo (€)</label><input id="newPrice" type="number" min="1" step="1" required></div>
+<div class="field"><label for="newLocation">Città / zona</label><input id="newLocation" maxlength="120" required></div>
+<div class="field"><label for="newArea">Superficie (m²)</label><input id="newArea" type="number" min="1" step="1"></div>
+<div class="field"><label for="newBeds">Camere</label><input id="newBeds" type="number" min="0" max="50" step="1"></div>
+<div class="field"><label for="newBaths">Bagni</label><input id="newBaths" type="number" min="0" max="30" step="1"></div>
+<div class="field"><label for="newImage">Immagine principale (URL HTTPS)</label><input id="newImage" type="url" placeholder="https://…"></div>
+<div class="field full"><label for="newFiles">Fotografie dell'immobile (JPG, PNG o WebP)</label><input id="newFiles" type="file" accept="image/jpeg,image/png,image/webp" multiple><small class="help">Massimo 20 fotografie, 5 MB ciascuna. Le fotografie degli annunci in attesa restano private.</small></div>
+<div class="field full"><label for="newDescription">Descrizione</label><textarea id="newDescription" maxlength="5000" required placeholder="Descrivi le caratteristiche principali dell'immobile"></textarea></div>
+</div><p class="help">L'annuncio viene salvato come “in attesa” e non è visibile al pubblico finché non viene approvato. Inserisci solo informazioni che sei autorizzato a pubblicare.</p><button class="btn" id="submitListing" type="submit">Invia annuncio</button></form></div></div>
+<div class="modal" id="detailModal" role="dialog" aria-modal="true" aria-labelledby="detailTitle"><div class="dialog"><div class="dialog-head"><div class="eyebrow">Scheda immobile</div><button class="close" id="closeDetail" type="button" aria-label="Chiudi">×</button></div><div id="detailContent"></div></div></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+(() => {
+'use strict';
+const SUPABASE_URL='https://upcgbbwwghaazsqfbwri.supabase.co';
+const SUPABASE_KEY='sb_publishable_SrxxuVdqu0TqBEhkfxIO1Q_Xdi834aQ';
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const $=id=>document.getElementById(id);
+const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const safeImage=value=>{try{const u=new URL(value);return u.protocol==='https:'&&!u.username&&!u.password?u.href:''}catch{return ''}};
+const euro=value=>Number(value||0).toLocaleString('it-IT',{style:'currency',currency:'EUR',maximumFractionDigits:0});
+let session=null,allListings=[],activeProperty=null;
+function toast(message){$('toast').textContent=message;$('toast').style.display='block';window.clearTimeout(window.__aurenPropertiesToast);window.__aurenPropertiesToast=window.setTimeout(()=>$('toast').style.display='none',4200)}
+function openModal(id){$(id).classList.add('open');document.body.style.overflow='hidden'}
+function closeModal(id){$(id).classList.remove('open');document.body.style.overflow=''}
+function statusLabel(value){return ({pending:'In verifica',published:'Pubblicato',rejected:'Non approvato',sold:'Venduto',rented:'Affittato'})[value]||value}
+function render(items){
+ const root=$('listings');$('resultCount').textContent=items.length+' immobili';
+ if(!items.length){root.innerHTML='<div class="empty">Non ci sono immobili che corrispondono ai filtri selezionati.</div>';return}
+ root.innerHTML=items.map(p=>{const img=safeImage(p.image_url);return '<article class="card"><div class="image">'+(img?'<img loading="lazy" src="'+esc(img)+'" alt="'+esc(p.title)+'">':'')+'<span class="tag">'+(p.listing_type==='rent'?'Affitto':'Vendita')+'</span></div><div class="card-body"><div class="place">'+esc(p.city)+' · '+esc(p.property_type||'Immobile')+'</div><h3>'+esc(p.title)+'</h3><div class="facts"><span>'+ (p.surface_sqm?esc(p.surface_sqm)+' m²':'Superficie n.d.')+'</span><span>'+ (p.bedrooms!==null&&p.bedrooms!==undefined?esc(p.bedrooms)+' camere':'Camere n.d.')+'</span><span>'+ (p.bathrooms!==null&&p.bathrooms!==undefined?esc(p.bathrooms)+' bagni':'')+'</span></div><div class="price-row"><span class="price">'+euro(p.price)+'</span><button class="detail" type="button" data-detail="'+esc(p.id)+'">Dettagli ↗</button></div></div></article>'}).join('');
+ root.querySelectorAll('[data-detail]').forEach(button=>button.addEventListener('click',()=>showDetail(button.dataset.detail)));
+}
+function applyFilters(){
+ const q=$('q').value.trim().toLocaleLowerCase('it'),purpose=$('purpose').value,type=$('type').value,max=Number($('maxPrice').value||0);
+ const filtered=allListings.filter(p=>(!q||String(p.city||'').toLocaleLowerCase('it').includes(q))&&(!purpose||p.listing_type===purpose)&&(!type||p.property_type===type)&&(!max||Number(p.price)<=max));
+ render(filtered);
+}
+async function loadListings(){
+ $('listings').innerHTML='<div class="empty">Caricamento annunci…</div>';
+ const {data,error}=await db.from('properties').select('id,title,description,property_type,listing_type,price,city,surface_sqm,bedrooms,bathrooms,image_url,created_at').eq('status','published').order('created_at',{ascending:false}).limit(100);
+ if(error){console.error('AUREN Properties:',error);$('listings').innerHTML='<div class="empty">Non è stato possibile caricare gli annunci. Riprova più tardi.</div>';$('resultCount').textContent='Servizio temporaneamente non disponibile';return}
+ allListings=await Promise.all((data||[]).map(async p=>({...p,image_url:await window.AURENStorage.resolveImageUrl(db,p.image_url)})));applyFilters();
+}
+async function showDetail(id){
+ const p=allListings.find(item=>item.id===id);if(!p)return;activeProperty=p;
+ let gallery=[];
+ try{const {data}=await db.from('property_images').select('image_url,storage_path').eq('property_id',id).limit(20);gallery=await Promise.all((data||[]).map(x=>window.AURENStorage.resolveImageUrl(db,x.image_url,x.storage_path)));gallery=gallery.map(safeImage).filter(Boolean)}catch(e){console.warn(e)}
+ const images=[...new Set([safeImage(p.image_url),...gallery].filter(Boolean))];
+ $('detailContent').innerHTML=(images.length?'<img class="detail-image" src="'+esc(images[0])+'" alt="'+esc(p.title)+'">':'')+'<div class="place" style="margin-top:18px">'+esc(p.city)+' · '+esc(p.property_type||'Immobile')+'</div><h2 id="detailTitle">'+esc(p.title)+'</h2><p><strong>'+euro(p.price)+'</strong> · '+(p.listing_type==='rent'?'In affitto':'In vendita')+'</p><p class="muted">'+esc(p.description||'Descrizione non disponibile.')+'</p><p class="muted">'+(p.surface_sqm?esc(p.surface_sqm)+' m² · ':'')+(p.bedrooms!==null&&p.bedrooms!==undefined?esc(p.bedrooms)+' camere · ':'')+(p.bathrooms!==null&&p.bathrooms!==undefined?esc(p.bathrooms)+' bagni':'')+'</p><section style="border-top:1px solid var(--line);padding-top:18px;margin-top:20px"><h3 style="font:400 25px Georgia,serif">Richiedi informazioni</h3><p class="help">La richiesta sarà inoltrata al team AUREN per il contatto relativo a questo annuncio.</p><form id="contactForm"><div class="form-grid"><div class="field"><label for="contactName">Nome</label><input id="contactName" maxlength="120" autocomplete="name"></div><div class="field"><label for="contactEmail">Email</label><input id="contactEmail" type="email" maxlength="254" autocomplete="email"></div><div class="field"><label for="contactPhone">Telefono</label><input id="contactPhone" type="tel" maxlength="40" autocomplete="tel"></div><div class="field full"><label for="contactMessage">Messaggio</label><textarea id="contactMessage" maxlength="2000" placeholder="Vorrei ricevere maggiori informazioni…"></textarea></div></div><p class="help">Inserisci almeno un recapito: email oppure telefono.</p><button class="btn" id="sendContact" type="submit">Invia richiesta</button></form></section>';
+ openModal('detailModal');
+}
+async function loadMine(){
+ if(!session)return;
+ $('myProperties').hidden=false;$('mineList').textContent='Caricamento…';
+ const {data,error}=await db.from('properties').select('id,title,city,price,status,created_at').eq('owner_id',session.user.id).order('created_at',{ascending:false}).limit(100);
+ if(error){$('mineList').textContent='Non è stato possibile caricare i tuoi annunci.';console.error(error);return}
+ if(!data?.length){$('mineList').textContent='Non hai ancora inviato annunci.';return}
+ $('mineList').innerHTML=data.map(p=>'<div class="my-item"><div><strong>'+esc(p.title)+'</strong><div class="muted">'+esc(p.city)+' · '+euro(p.price)+'</div></div><span class="status">'+esc(statusLabel(p.status))+'</span></div>').join('');
+}
+$('detailContent').addEventListener('submit',async e=>{if(e.target.id!=='contactForm')return;e.preventDefault();const email=$('contactEmail').value.trim(),phone=$('contactPhone').value.trim();if(!email&&!phone){toast('Inserisci almeno email oppure telefono.');return}const button=$('sendContact');button.disabled=true;try{const title=$('detailTitle')?.textContent||'Immobile';const notes=['Richiesta informazioni immobile: '+title,'ID immobile: '+(activeProperty?.id||''),'Nome: '+$('contactName').value.trim(),'Messaggio: '+$('contactMessage').value.trim()].join('\\n');const {error}=await db.from('service_requests').insert({user_id:session?.user?.id||null,service_id:null,contact_email:email||null,contact_phone:phone||null,notes,status:'pending'});if(error)throw error;$('contactForm').reset();toast('Richiesta inviata. Grazie per aver contattato AUREN.')}catch(error){console.error('AUREN property inquiry:',error);toast('Invio non riuscito. Riprova più tardi.')}finally{button.disabled=false}});
+async function startPublish(){
+ if(!session){toast('Accedi o crea un account AUREN per pubblicare un immobile.');location.href='account.html';return}
+ openModal('listingModal');
+}
+$('publishBtn').addEventListener('click',startPublish);$('publishBtn2').addEventListener('click',startPublish);
+$('closeListing').addEventListener('click',()=>closeModal('listingModal'));$('closeDetail').addEventListener('click',()=>closeModal('detailModal'));
+['listingModal','detailModal'].forEach(id=>$(id).addEventListener('click',e=>{if(e.target===$(id))closeModal(id)}));
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal('listingModal');closeModal('detailModal')}});
+$('searchForm').addEventListener('submit',e=>{e.preventDefault();applyFilters()});
+['q','purpose','type','maxPrice'].forEach(id=>$(id).addEventListener('input',applyFilters));
+$('refreshMine').addEventListener('click',loadMine);
+$('listingForm').addEventListener('submit',async e=>{
+ e.preventDefault();if(!session){toast('Accedi per continuare.');return}
+ const button=$('submitListing');button.disabled=true;
+ try{
+  const image=safeImage($('newImage').value.trim());
+  const files=$('newFiles')?.files;
+  if($('newImage').value.trim()&&!image)throw new Error('Inserisci un URL immagine HTTPS valido.');
+  if(image&&files?.length)throw new Error('Scegli le fotografie da caricare oppure un URL esterno, non entrambi.');
+  const payload={owner_id:session.user.id,title:$('newTitle').value.trim(),description:$('newDescription').value.trim(),property_type:$('newType').value,listing_type:$('newPurpose').value,price:Number($('newPrice').value),city:$('newLocation').value.trim(),surface_sqm:$('newArea').value?Number($('newArea').value):null,bedrooms:$('newBeds').value?Number($('newBeds').value):null,bathrooms:$('newBaths').value?Number($('newBaths').value):null,status:'pending',image_url:image||null};
+  if(!payload.title||!payload.city||!payload.description||!Number.isFinite(payload.price)||payload.price<=0)throw new Error('Controlla i campi obbligatori.');
+  const {data:created,error}=await db.from('properties').insert(payload).select('id').single();if(error)throw error;
+  if(files?.length){
+   const uploaded=await window.AURENStorage.uploadPropertyImages(db,created.id,files);
+   const {error:updateError}=await db.from('properties').update({image_url:uploaded[0].publicUrl}).eq('id',created.id).eq('owner_id',session.user.id);
+   if(updateError){await window.AURENStorage.removePropertyImages(db,uploaded.map(x=>x.path));throw updateError}
+   const galleryRows=uploaded.map(x=>({property_id:created.id,owner_id:session.user.id,image_url:x.publicUrl,storage_path:x.path}));
+   const {error:galleryError}=await db.from('property_images').insert(galleryRows);
+   if(galleryError)console.warn('AUREN gallery metadata:',galleryError.message);
+  }
+  $('listingForm').reset();closeModal('listingModal');toast('Annuncio inviato. Sarà visibile dopo la verifica.');await loadMine();
+ }catch(error){console.error('AUREN Properties submit:',error);toast(error.message||'Invio non riuscito. Riprova.')}
+ finally{button.disabled=false}
+});
+db.auth.getSession().then(({data,error})=>{
+ if(error)console.warn(error);
+ session=data?.session||null;
+ if(session){$('accountLink').textContent='Il mio account';$('myProperties').hidden=false;loadMine()}
+});
+db.auth.onAuthStateChange((_event,next)=>{session=next;$('accountLink').textContent=session?'Il mio account':'Accedi';$('myProperties').hidden=!session;if(session)loadMine()});
+loadListings();
+})();
+</script>
+</body>
+</html>

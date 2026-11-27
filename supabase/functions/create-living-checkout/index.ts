@@ -1,0 +1,282 @@
+import { createClient } from "npm:@supabase/supabase-js@2";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": Deno.env.get("SITE_URL") ?? "https://aurenliving.it",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Vary": "Origin",
+};
+
+const json = (body: unknown, status = 200) =>
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+
+const normalizeCountry = (value: string) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase().replace(/[.']/g, "").replace(/\s+/g, " ");
+const countryZones: Record<string, string> = Object.create(null);
+const addCountries = (zone: string, names: string[]) => names.forEach((name) => {
+  const key = normalizeCountry(name);
+  if (!countryZones[key]) countryZones[key] = zone;
+});
+addCountries("italia", ["Italia","Italy"]);
+addCountries("europa", ["Austria","Belgio","Bulgaria","Cipro","Croazia","Danimarca","Estonia","Finlandia","Francia","Germania","Grecia","Irlanda","Lettonia","Lituania","Lussemburgo","Malta","Paesi Bassi","Olanda","Polonia","Portogallo","Repubblica Ceca","Romania","Slovacchia","Slovenia","Spagna","Svezia","Ungheria","Austria","Albania","Andorra","Bosnia ed Erzegovina","Islanda","Kosovo","Liechtenstein","Moldavia","Monaco","Montenegro","Macedonia del Nord","Norvegia","San Marino","Serbia","Ucraina","Citta del Vaticano","Vaticano"]);
+addCountries("regno_unito_svizzera", ["Regno Unito","United Kingdom","UK","Gran Bretagna","Great Britain","Svizzera","Suisse","Switzerland"]);
+addCountries("america", ["Stati Uniti","Stati Uniti d America","USA","United States","United States of America","Canada","Messico","Mexico","Belize","Costa Rica","El Salvador","Guatemala","Honduras","Nicaragua","Panama","Antigua e Barbuda","Bahamas","Barbados","Cuba","Dominica","Repubblica Dominicana","Giamaica","Grenada","Haiti","Saint Kitts e Nevis","Santa Lucia","Saint Vincent e Grenadine","Trinidad e Tobago","Argentina","Bolivia","Brasile","Brazil","Cile","Chile","Colombia","Ecuador","Guyana","Paraguay","Peru","Perù","Suriname","Uruguay","Venezuela"]);
+addCountries("asia_oceania", ["Afghanistan","Armenia","Azerbaigian","Bahrein","Bangladesh","Bhutan","Brunei","Cambogia","Cina","China","Corea del Nord","Corea del Sud","Georgia","Giappone","India","Indonesia","Iran","Iraq","Israele","Giordania","Kazakistan","Kuwait","Kirghizistan","Laos","Libano","Malesia","Maldive","Mongolia","Myanmar","Nepal","Oman","Pakistan","Filippine","Qatar","Arabia Saudita","Singapore","Sri Lanka","Siria","Taiwan","Tagikistan","Thailandia","Timor Est","Turchia","Turkmenistan","Emirati Arabi Uniti","Uzbekistan","Vietnam","Yemen","Australia","Fiji","Kiribati","Isole Marshall","Micronesia","Nauru","Nuova Zelanda","Palau","Papua Nuova Guinea","Samoa","Isole Salomone","Tonga","Tuvalu","Vanuatu"]);
+addCountries("resto_mondo", ["Algeria","Angola","Benin","Botswana","Burkina Faso","Burundi","Camerun","Capo Verde","Repubblica Centrafricana","Ciad","Comore","Congo","Repubblica Democratica del Congo","Costa d Avorio","Gibuti","Egitto","Guinea Equatoriale","Eritrea","Eswatini","Etiopia","Gabon","Gambia","Ghana","Guinea","Guinea-Bissau","Kenya","Lesotho","Liberia","Libia","Madagascar","Malawi","Mali","Mauritania","Mauritius","Marocco","Mozambico","Namibia","Niger","Nigeria","Ruanda","Sao Tome e Principe","Senegal","Seychelles","Sierra Leone","Somalia","Sudafrica","Sud Sudan","Sudan","Tanzania","Togo","Tunisia","Uganda","Zambia","Zimbabwe"]);
+
+addCountries("europa", ["Belgium","Bulgaria","Croatia","Cyprus","Czech Republic","Denmark","Estonia","Finland","France","Germany","Greece","Hungary","Ireland","Latvia","Lithuania","Luxembourg","Malta","Netherlands","Norway","Poland","Portugal","Romania","Serbia","Slovakia","Slovenia","Spain","Sweden","Ukraine","Albania","Andorra","Belarus","Bosnia and Herzegovina","Faroe Islands","Gibraltar","Iceland","Isle of Man","Jersey","Guernsey","Monaco","Montenegro","San Marino"]);
+addCountries("america", ["Greenland","United States","Canada","Mexico","Argentina","Bahamas","Barbados","Belize","Bolivia","Brazil","Colombia","Costa Rica","Cuba","Dominica","Ecuador","El Salvador","Grenada","Guatemala","Guyana","Haiti","Honduras","Jamaica","Nicaragua","Panama","Paraguay","Suriname","Uruguay","Antigua and Barbuda","Saint Lucia","Trinidad and Tobago","Saint Vincent and the Grenadines","Saint Kitts and Nevis","Turks and Caicos","Curaçao","Curacao","Cayman Islands","Aruba","Bermuda","Falkland Islands","French Guiana","Guadeloupe","Martinique","Montserrat","Anguilla","British Virgin Islands","U.S. Virgin Islands","Puerto Rico"]);
+addCountries("asia_oceania", ["Afghanistan","Armenia","Azerbaijan","Bahrain","Bangladesh","Bhutan","Cambodia","China","Indonesia","Iraq","Israel","Japan","Jordan","Kazakhstan","Kuwait","Kyrgyzstan","Laos","Lebanon","Malaysia","Maldives","Mongolia","Myanmar","Nepal","Oman","Pakistan","Philippines","Qatar","Singapore","Sri Lanka","Syria","Tajikistan","Thailand","Turkmenistan","Uzbekistan","Vietnam","Yemen","Australia","Fiji","Kiribati","Nauru","New Zealand","Palau","Samoa","Tonga","Tuvalu","Vanuatu","Cook Islands","French Polynesia","New Caledonia","Niue","Tokelau","American Samoa","Northern Mariana Islands","Micronesia","Marshall Islands","Solomon Islands","Wallis and Futuna","Christmas Island","Cocos (Keeling) Islands","Norfolk Island","Pitcairn Islands"]);
+addCountries("resto_mondo", ["Algeria","Angola","Benin","Botswana","Burkina Faso","Burundi","Cameroon","Cape Verde","Central African Republic","Chad","Comoros","Democratic Republic of the Congo","Republic of the Congo","Djibouti","Egypt","Equatorial Guinea","Eritrea","Eswatini","Ethiopia","Gabon","The Gambia","Ghana","Guinea","Guinea-Bissau","Kenya","Lesotho","Liberia","Libya","Madagascar","Malawi","Mali","Mauritania","Mauritius","Morocco","Mozambique","Namibia","Niger","Nigeria","Rwanda","Sao Tome and Principe","Senegal","Seychelles","Sierra Leone","Somalia","South Africa","South Sudan","Sudan","Tanzania","Togo","Tunisia","Uganda","Zambia","Zimbabwe","Western Sahara","Antarctica"]);
+
+addCountries("europa", ["Czechia","The Netherlands","North Macedonia","Vatican City","Moldova"]);
+addCountries("regno_unito_svizzera", ["United Kingdom of Great Britain and Northern Ireland","Britain","England","Scotland","Wales","Northern Ireland"]);
+addCountries("america", ["United States of America","United States Minor Outlying Islands","US Virgin Islands","Virgin Islands, U.S.","Virgin Islands, British","Dominican Republic","Saint Kitts and Nevis","Saint Vincent and the Grenadines","Trinidad and Tobago","Bolivia (Plurinational State of)","Brazil","Chile","Peru","Venezuela, Bolivarian Republic of"]);
+addCountries("asia_oceania", ["South Korea","Republic of Korea","Korea, Republic of","North Korea","Democratic People's Republic of Korea","Korea, Democratic People's Republic of","United Arab Emirates","Saudi Arabia","Lao People's Democratic Republic","Laos","Türkiye","Turkey","East Timor","Timor-Leste","Brunei Darussalam","Iran, Islamic Republic of","Syrian Arab Republic","Taiwan, Province of China","Hong Kong SAR China","Macao SAR China","New Zealand","Papua New Guinea","Solomon Islands","Marshall Islands","Federated States of Micronesia"]);
+addCountries("resto_mondo", ["Cabo Verde","Cape Verde","Central African Republic","Democratic Republic of the Congo","Republic of the Congo","Congo","Côte d’Ivoire","Cote d'Ivoire","Equatorial Guinea","The Gambia","Gambia","Eswatini","Swaziland","South Africa","South Sudan","Sao Tome and Principe","São Tomé and Príncipe","Ivory Coast","United Republic of Tanzania","Tanzania, United Republic of"]);
+
+addCountries("europa", ["Russia","Russian Federation","Federazione Russa"]);
+addCountries("asia_oceania", ["Palestina","State of Palestine","Hong Kong","Hong Kong SAR","Macao","Macau","Macao SAR","Russia (Asian region)"]);
+addCountries("america", ["Puerto Rico","Guam","U.S. Virgin Islands","Isole Vergini Americane","British Virgin Islands","Isole Vergini Britanniche","Aruba","Curaçao","Curacao","Sint Maarten","Saint Martin","Martinica","Martinique","Guadalupa","Guadeloupe","Guyana Francese","French Guiana","Isole Cayman","Cayman Islands","Bermuda","Bonaire","Saint Barthélemy","Saint Barthelemy","Turks and Caicos Islands","Isole Turks e Caicos","Montserrat","Anguilla","Saint Pierre e Miquelon","Saint Pierre and Miquelon","Isole Falkland","Falkland Islands"]);
+addCountries("resto_mondo", ["Côte d'Ivoire","Ivory Coast","Democratic Republic of the Congo","DR Congo","Republic of the Congo","Congo-Brazzaville","Congo-Kinshasa","Western Sahara","Sahrawi Arab Democratic Republic","Réunion","Reunion","Mayotte","French Southern Territories","South Georgia and the South Sandwich Islands","Saint Helena","Ascension Island","Tristan da Cunha"]);
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  if (req.method !== "POST") return json({ error: "Metodo non consentito" }, 405);
+  const requestOrigin = req.headers.get("Origin");
+  const allowedOrigin = Deno.env.get("SITE_URL") ?? "https://aurenliving.it";
+  try {
+    if (requestOrigin && new URL(requestOrigin).origin !== new URL(allowedOrigin).origin) {
+      return json({ error: "Origine non autorizzata" }, 403);
+    }
+  } catch {
+    return json({ error: "Origine non valida" }, 403);
+  }
+
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+  const siteUrl = (Deno.env.get("SITE_URL") ?? "https://aurenliving.it").replace(/\/$/, "");
+  if (!supabaseUrl || !serviceKey || !stripeKey) {
+    return json({ error: "Checkout non configurato" }, 503);
+  }
+
+  const contentLength = Number(req.headers.get("content-length") ?? "0");
+  if (contentLength > 64_000) return json({ error: "Richiesta troppo grande" }, 413);
+  let body: Record<string, unknown>;
+  try {
+    const raw = await req.text();
+    if (raw.length > 64_000) return json({ error: "Richiesta troppo grande" }, 413);
+    body = JSON.parse(raw);
+    if (!body || typeof body !== "object" || Array.isArray(body)) throw new Error("Invalid object");
+  } catch {
+    return json({ error: "Richiesta non valida" }, 400);
+  }
+
+  const customerName = typeof body.customer_name === "string" ? body.customer_name.trim() : "";
+  const customerEmail = typeof body.customer_email === "string" ? body.customer_email.trim().toLowerCase() : "";
+  const phone = typeof body.phone === "string" ? body.phone.trim() : "";
+  const shippingAddress = body.shipping_address;
+  const billingAddress = body.billing_address ?? null;
+  const customerNote = typeof body.customer_note === "string" ? body.customer_note.trim() : "";
+  const items = body.items;
+  const checkoutAttemptId = typeof body.checkout_attempt_id === "string" ? body.checkout_attempt_id : "";
+  const address = shippingAddress && typeof shippingAddress === "object" && !Array.isArray(shippingAddress)
+    ? shippingAddress as Record<string, unknown> : null;
+  const requiredAddressFields = ["line1", "postal_code", "city", "province", "country"];
+  const addressValid = !!address && requiredAddressFields.every((key) =>
+    typeof address[key] === "string" && (address[key] as string).trim().length > 0 &&
+    (address[key] as string).trim().length <= (key === "line1" ? 180 : 100)
+  );
+  if (!customerName || customerName.length > 160 ||
+      customerEmail.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail) ||
+      phone.length > 40 || customerNote.length > 1000 || !addressValid ||
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(checkoutAttemptId) ||
+      !Array.isArray(items) || items.length < 1 || items.length > 50) {
+    return json({ error: "Controlla i dati del cliente, la spedizione e i prodotti" }, 400);
+  }
+
+  const supabase = createClient(supabaseUrl, serviceKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+  const countryName = normalizeCountry(String(address.country));
+  const shippingZone = countryZones[countryName];
+  if (!shippingZone) return json({ error: "Paese non riconosciuto o non ancora abilitato per la spedizione. Contatta AUREN." }, 400);
+  const { data: shippingConfig, error: shippingError } = await supabase
+    .from("living_shipping_zones").select("rate_eur, active").eq("zone_key", shippingZone).maybeSingle();
+  if (shippingError || !shippingConfig?.active || shippingConfig.rate_eur === null) {
+    console.error("Shipping zone unavailable", { shippingZone, shippingError });
+    return json({ error: "La spedizione verso questo Paese non è ancora configurata." }, 503);
+  }
+  const shippingCents = Math.round(Number(shippingConfig.rate_eur) * 100);
+  if (!Number.isSafeInteger(shippingCents) || shippingCents < 0 || shippingCents > 100000) {
+    return json({ error: "Tariffa di spedizione non valida" }, 503);
+  }
+  const shippingTotal = shippingCents / 100;
+  let userId: string | null = null;
+  const authHeader = req.headers.get("Authorization");
+  if (authHeader?.startsWith("Bearer ") && authHeader.slice(7).startsWith("eyJ")) {
+    const { data, error } = await supabase.auth.getUser(authHeader.slice(7));
+    if (error) return json({ error: "Sessione utente non valida" }, 401);
+    userId = data.user?.id ?? null;
+  }
+
+  // Only identifiers and quantities come from the browser. SQL locks stock and
+  // recalculates every price from the trusted catalogue inside one transaction.
+  const safeItems = items.map((item) => ({
+    product_id: item?.product_id,
+    variant_id: item?.variant_id ?? null,
+    quantity: item?.quantity,
+  }));
+  const fingerprintPayload = {
+    customer_name: customerName,
+    customer_email: customerEmail,
+    phone: phone || null,
+    shipping_address: shippingAddress,
+    billing_address: billingAddress,
+    customer_note: customerNote,
+    shipping_cents: shippingCents,
+    user_id: userId,
+    items: safeItems.map((item) => ({
+      product_id: item.product_id,
+      variant_id: item.variant_id ?? null,
+      quantity: item.quantity,
+    })).sort((a, b) => String(a.product_id).localeCompare(String(b.product_id)) ||
+      String(a.variant_id ?? "").localeCompare(String(b.variant_id ?? ""))),
+  };
+  const fingerprintBytes = new TextEncoder().encode(JSON.stringify(fingerprintPayload));
+  const fingerprintDigest = await crypto.subtle.digest("SHA-256", fingerprintBytes);
+  const requestHash = Array.from(new Uint8Array(fingerprintDigest))
+    .map((byte) => byte.toString(16).padStart(2, "0")).join("");
+
+  const { data: reservation, error: reserveError } = await supabase.rpc(
+    "create_living_order_reservation",
+    {
+      p_customer_name: customerName,
+      p_customer_email: customerEmail,
+      p_phone: phone || null,
+      p_shipping_address: shippingAddress,
+      p_billing_address: billingAddress,
+      p_customer_note: customerNote,
+      p_shipping_total: shippingTotal,
+      p_user_id: userId,
+      p_items: safeItems,
+      p_checkout_attempt_id: checkoutAttemptId,
+      p_request_hash: requestHash,
+    },
+  );
+  if (reserveError || !reservation?.order_id || !Array.isArray(reservation.items)) {
+    console.error("Order reservation failed", reserveError);
+    return json({ error: "Prodotti non disponibili o dati ordine non validi" }, 409);
+  }
+
+  const form = new URLSearchParams();
+  form.set("mode", "payment");
+  // Stripe Checkout permits an expiry from 30 minutes to 24 hours.
+  const reservationExpiry = Math.floor(new Date(String(reservation.reservation_expires_at)).getTime() / 1000);
+  if (!Number.isSafeInteger(reservationExpiry)) {
+    console.error("Reservation has an invalid expiry timestamp", { orderId: reservation.order_id });
+    return json({ error: "Prenotazione non valida. Contatta l'assistenza." }, 500);
+  }
+  // Keep this value stable for Stripe's idempotency cache on every retry.
+  form.set("expires_at", String(reservationExpiry));
+  form.set("success_url", siteUrl + "/living.html?checkout=success&session_id={CHECKOUT_SESSION_ID}");
+  form.set("cancel_url", siteUrl + "/living.html?checkout=cancelled");
+  form.set("customer_email", customerEmail);
+  if (shippingCents > 0) {
+    form.set("shipping_options[0][shipping_rate_data][type]", "fixed_amount");
+    form.set("shipping_options[0][shipping_rate_data][fixed_amount][amount]", String(shippingCents));
+    form.set("shipping_options[0][shipping_rate_data][fixed_amount][currency]", "eur");
+    form.set("shipping_options[0][shipping_rate_data][display_name]", "Spedizione");
+  }
+  form.set("client_reference_id", reservation.order_id);
+  form.set("metadata[order_id]", reservation.order_id);
+  reservation.items.forEach((item: Record<string, unknown>, index: number) => {
+    const prefix = "line_items[" + index + "]";
+    form.set(prefix + "[quantity]", String(item.quantity));
+    form.set(prefix + "[price_data][currency]", "eur");
+    form.set(prefix + "[price_data][unit_amount]", String(Math.round(Number(item.unit_price) * 100)));
+    form.set(prefix + "[price_data][product_data][name]", String(item.product_name) +
+      (item.variant_name ? " — " + String(item.variant_name) : ""));
+  });
+
+  let stripeResponse: Response;
+  let session: Record<string, unknown>;
+  try {
+    stripeResponse = await fetch("https://api.stripe.com/v1/checkout/sessions", {
+      method: "POST",
+      headers: {
+        "Authorization": "Bearer " + stripeKey,
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Idempotency-Key": "auren-living-checkout-" + checkoutAttemptId,
+      },
+      body: form,
+    });
+    const payload: unknown = await stripeResponse.json();
+    if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+      throw new Error("Invalid Stripe response");
+    }
+    session = payload as Record<string, unknown>;
+  } catch (error) {
+    // The request may have reached Stripe even if the response was lost.
+    // Keep stock reserved; a retry with the same idempotency key recovers the same session.
+    console.error("Stripe session request outcome is unknown; reservation retained for safe retry", {
+      orderId: reservation.order_id,
+      checkoutAttemptId,
+    });
+    return json({ error: "Esito del pagamento non verificabile. Riprova tra qualche secondo senza modificare il carrello." }, 502);
+  }
+  let checkoutUrl: URL | null = null;
+  try {
+    checkoutUrl = typeof session.url === "string" ? new URL(session.url) : null;
+  } catch { /* Invalid provider URL is rejected below. */ }
+  if (!stripeResponse.ok || !checkoutUrl || checkoutUrl.protocol !== "https:" ||
+      checkoutUrl.hostname !== "checkout.stripe.com" ||
+      typeof session.id !== "string" || !session.id.startsWith("cs_")) {
+    // Never log the full provider payload: it may contain customer or checkout data.
+    const stripeError = session.error && typeof session.error === "object"
+      ? session.error as Record<string, unknown> : {};
+    console.error("Stripe session creation failed", {
+      status: stripeResponse.status,
+      errorType: typeof stripeError.type === "string" ? stripeError.type : undefined,
+      errorCode: typeof stripeError.code === "string" ? stripeError.code : undefined,
+    });
+    // A definitive Stripe 4xx means no Checkout Session was created. A 5xx or
+    // malformed success response is ambiguous, so stock must remain reserved.
+    if (stripeResponse.status >= 400 && stripeResponse.status < 500) {
+      await supabase.rpc("release_living_order_reservation", { p_order_id: reservation.order_id });
+    }
+    return json({ error: "Impossibile avviare il pagamento. Riprova." }, 502);
+  }
+
+  const { data: linkedOrder, error: updateError } = await supabase.from("living_orders").update({
+    payment_provider: "stripe",
+    provider_session_id: session.id,
+    updated_at: new Date().toISOString(),
+  }).eq("id", reservation.order_id).eq("payment_status", "pending").select("id").maybeSingle();
+
+  if (updateError || !linkedOrder) {
+    // Never release reserved stock unless Stripe confirms that the Checkout
+    // session was expired: otherwise a customer could pay for stock resold.
+    try {
+      const expireResponse = await fetch(
+        "https://api.stripe.com/v1/checkout/sessions/" + encodeURIComponent(session.id) + "/expire",
+        { method: "POST", headers: { "Authorization": "Bearer " + stripeKey } },
+      );
+      if (expireResponse.ok) {
+        await supabase.rpc("release_living_order_reservation", { p_order_id: reservation.order_id });
+      } else {
+        console.error("Stripe session could not be expired; reserved stock left locked for reconciliation", {
+          orderId: reservation.order_id, sessionId: session.id, status: expireResponse.status,
+        });
+      }
+    } catch (expireError) {
+      console.error("Stripe expiry request failed; reserved stock left locked for reconciliation", expireError);
+    }
+    return json({ error: "Errore durante la preparazione dell'ordine. Contatta l'assistenza se hai ricevuto un addebito." }, 502);
+  }
+
+  return json({ checkout_url: checkoutUrl.href, order_number: reservation.order_number });
+});

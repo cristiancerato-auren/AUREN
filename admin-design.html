@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#F2E8DC">
+<title>Visual Editor | AUREN</title>
+<style>
+:root{--ink:#30241D;--paper:#F2E8DC;--accent:#9B765A;--line:#ddd0c3;--muted:#786b60}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.5 Arial,sans-serif}
+header{background:var(--ink);color:#fff;padding:18px 4vw;display:flex;justify-content:space-between;align-items:center;gap:15px}header strong{font:28px Georgia,serif;letter-spacing:.15em}
+main{width:min(1180px,94vw);margin:30px auto}.intro{max-width:760px}.intro h1{font:400 42px Georgia,serif;margin:0}.muted{color:var(--muted)}
+.layout{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(300px,.9fr);gap:22px;align-items:start}.panel{background:#fffdf9;border:1px solid var(--line);padding:22px;margin:18px 0}.panel h2{font:400 26px Georgia,serif;margin:0 0 10px}.field{display:grid;gap:6px;margin:14px 0}.field label{font-size:12px;font-weight:700;color:var(--muted)}input,textarea,select{width:100%;padding:10px;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:3px;font:inherit}input[type=color]{height:44px;padding:4px}textarea{min-height:84px;resize:vertical}
+button{cursor:pointer;border:1px solid var(--ink);background:var(--ink);color:white;padding:10px 14px;border-radius:3px;font:inherit}button.secondary{background:transparent;color:var(--ink)}button.danger{background:#7b3027;border-color:#7b3027}
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:18px}.section-list{display:grid;gap:9px}.section-row{display:grid;grid-template-columns:auto 1fr auto auto;gap:10px;align-items:center;border:1px solid var(--line);padding:10px;background:#fff}.section-row[draggable=true]{cursor:grab}.section-row.dragging{opacity:.45}.section-row small{color:var(--muted)}.section-row input{width:auto}.handle{font-size:20px;color:var(--muted)}
+.block{border:1px solid var(--line);padding:14px;margin:12px 0;background:#fff}.block-head{display:flex;justify-content:space-between;gap:10px;align-items:center}.status{min-height:24px;color:var(--accent);font-weight:600}
+.preview{background:#f8f4ee;border:1px solid var(--line);padding:24px;position:sticky;top:16px}.preview h2{font:400 34px Georgia,serif}.preview .sample{padding:24px;background:var(--white);border:1px solid var(--line);margin-top:16px}
+@media(max-width:800px){.layout{grid-template-columns:1fr}.preview{position:static}.section-row{grid-template-columns:auto 1fr auto}.section-row small{display:none}}
+</style></head>
+<body>
+<header><strong>AUREN</strong><nav><a href="admin.html" style="color:#fff;margin-right:16px">Amministrazione</a><a href="./" style="color:#fff">Apri sito</a></nav></header>
+<main>
+<div class="intro"><h1>Visual editor</h1><p class="muted">Personalizza la homepage AUREN: colori, caratteri, testi e disposizione delle sezioni. Le modifiche vengono salvate online e applicate ai visitatori dopo il salvataggio.</p><p id="status" class="status" role="status">Verifica accesso…</p></div>
+<div id="editor" class="layout" hidden>
+<div>
+<section class="panel"><h2>Identità visiva</h2>
+<div class="field"><label for="ink">Colore principale</label><input id="ink" type="color"></div>
+<div class="field"><label for="paper">Sfondo</label><input id="paper" type="color"></div>
+<div class="field"><label for="accent">Colore accento</label><input id="accent" type="color"></div>
+<div class="field"><label for="white">Sfondo schede</label><input id="white" type="color"></div>
+<div class="field"><label for="font">Carattere</label><select id="font"><option value='Georgia, "Times New Roman", serif'>Georgia / elegante</option><option value="Arial, Helvetica, sans-serif">Arial / moderno</option><option value='"Times New Roman", serif'>Times New Roman / editoriale</option><option value="system-ui, sans-serif">System / essenziale</option></select></div>
+</section>
+<section class="panel"><h2>Testi homepage</h2>
+<div class="field"><label for="heroTitle">Titolo principale</label><input id="heroTitle" maxlength="140"></div>
+<div class="field"><label for="heroSubtitle">Descrizione principale</label><textarea id="heroSubtitle" maxlength="500"></textarea></div>
+</section>
+<section class="panel"><h2>Disposizione delle sezioni</h2><p class="muted">Trascina le righe per cambiare l’ordine. Puoi nascondere o mostrare ogni sezione.</p><div id="sections" class="section-list"></div></section>
+<section class="panel"><h2>Nuove sezioni</h2><p class="muted">Aggiungi un blocco editoriale con titolo e testo alla homepage.</p><div id="blocks"></div><button id="addBlock" class="secondary" type="button">+ Aggiungi sezione</button></section>
+<div class="actions"><button id="save">Salva e pubblica modifiche</button><button id="reset" class="secondary">Ripristina impostazioni iniziali</button></div>
+</div>
+<aside class="preview"><h2>Anteprima stile</h2><p class="muted">Esempio visivo dei colori e del carattere selezionati.</p><div class="sample"><div style="font-size:11px;letter-spacing:2px">AUREN / DESIGN</div><h2 id="previewTitle">Quattro mondi. Un’unica visione.</h2><p id="previewText">Una nuova identità, la stessa visione.</p><button type="button" id="previewButton">Scopri AUREN</button></div></aside>
+</div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.2"></script>
+<script>
+(() => {
+const db=window.supabase.createClient('https://upcgbbwwghaazsqfbwri.supabase.co','sb_publishable_SrxxuVdqu0TqBEhkfxIO1Q_Xdi834aQ');
+const $=id=>document.getElementById(id), status=t=>$('status').textContent=t;
+const defaults=window.AURENDesign?.defaults||{colors:{ink:'#30241D',paper:'#F2E8DC',accent:'#9B765A',white:'#FFFAF3'},font:'Georgia, "Times New Roman", serif',heroTitle:'Quattro mondi. Un’unica visione.',heroSubtitle:'AUREN riunisce immobiliare, arredamento, servizi creativi e ispirazione in un unico universo. Esplora i quattro mondi e scegli ciò di cui hai bisogno.',sectionOrder:['hero','divisions','explore','living-info','services','studio-info','how','sell','journal'],hiddenSections:[],customBlocks:[]};
+let config=structuredClone(defaults),dragged=null;
+const labels=window.AURENDesign?.labels||{hero:'Hero',divisions:'I quattro mondi',explore:'Immobili in evidenza','living-info':'Auren Living',services:'Servizi','studio-info':'Auren Studio',how:'Valori AUREN',sell:'Vendi con AUREN',journal:'Journal'};
+function renderSections(){
+ const root=$('sections');root.replaceChildren();
+ config.sectionOrder.forEach((id,index)=>{
+  const row=document.createElement('div');row.className='section-row';row.draggable=true;row.dataset.id=id;
+  const handle=document.createElement('span');handle.className='handle';handle.textContent='⠿';
+  const name=document.createElement('div');name.innerHTML='<strong></strong><br><small>Trascina per riordinare</small>';name.querySelector('strong').textContent=labels[id]||id;
+  const visible=document.createElement('label');visible.title='Mostra sezione';const check=document.createElement('input');check.type='checkbox';check.checked=!config.hiddenSections.includes(id);check.addEventListener('change',()=>{config.hiddenSections=check.checked?config.hiddenSections.filter(x=>x!==id):[...config.hiddenSections,id]});visible.append(check);
+  const up=document.createElement('button');up.type='button';up.className='secondary';up.textContent='↑';up.setAttribute('aria-label','Sposta su');up.disabled=index===0;up.onclick=()=>move(index,index-1);
+  const down=document.createElement('button');down.type='button';down.className='secondary';down.textContent='↓';down.setAttribute('aria-label','Sposta giù');down.disabled=index===config.sectionOrder.length-1;down.onclick=()=>move(index,index+1);
+  row.append(handle,name,visible,up,down);row.addEventListener('dragstart',()=>{dragged=id;row.classList.add('dragging')});row.addEventListener('dragend',()=>row.classList.remove('dragging'));row.addEventListener('dragover',e=>e.preventDefault());row.addEventListener('drop',e=>{e.preventDefault();const target=id;if(dragged&&dragged!==target){const from=config.sectionOrder.indexOf(dragged),to=config.sectionOrder.indexOf(target);move(from,to)}dragged=null});
+  root.append(row);
+ });
+}
+function move(from,to){if(to<0||to>=config.sectionOrder.length)return;const [v]=config.sectionOrder.splice(from,1);config.sectionOrder.splice(to,0,v);renderSections()}
+function renderBlocks(){const root=$('blocks');root.replaceChildren();config.customBlocks.forEach((b,i)=>{const card=document.createElement('div');card.className='block';const head=document.createElement('div');head.className='block-head';const label=document.createElement('strong');label.textContent='Sezione personalizzata '+(i+1);const del=document.createElement('button');del.type='button';del.className='danger';del.textContent='Rimuovi';del.onclick=()=>{config.customBlocks.splice(i,1);renderBlocks()};head.append(label,del);const title=document.createElement('input');title.maxLength=100;title.placeholder='Titolo sezione';title.value=b.title||'';title.addEventListener('input',()=>b.title=title.value);const body=document.createElement('textarea');body.maxLength=1000;body.placeholder='Testo della sezione';body.value=b.text||'';body.addEventListener('input',()=>b.text=body.value);card.append(head,title,body);root.append(card)})}
+function bind(){
+ ['ink','paper','accent','white'].forEach(k=>{$(k).value=config.colors[k];$(k).addEventListener('input',()=>{config.colors[k]=$(k).value;preview()})});
+ $('font').value=config.font;$('font').addEventListener('change',()=>{config.font=$('font').value;preview()});
+ $('heroTitle').value=config.heroTitle;$('heroSubtitle').value=config.heroSubtitle;
+ $('heroTitle').addEventListener('input',()=>{config.heroTitle=$('heroTitle').value;preview()});
+ $('heroSubtitle').addEventListener('input',()=>{config.heroSubtitle=$('heroSubtitle').value;preview()});
+ $('addBlock').onclick=()=>{if(config.customBlocks.length>=12){status('Puoi aggiungere al massimo 12 sezioni.');return}config.customBlocks.push({title:'Nuova sezione',text:'Inserisci qui il tuo testo.'});renderBlocks()};
+ $('save').onclick=save;$('reset').onclick=()=>{if(!confirm('Ripristinare le impostazioni iniziali? Le modifiche correnti non salvate andranno perse.'))return;config=structuredClone(defaults);fill();status('Impostazioni iniziali caricate. Premi Salva per applicarle.')};
+}
+function preview(){$('previewTitle').textContent=config.heroTitle;$('previewText').textContent=config.heroSubtitle;document.querySelector('.preview').style.setProperty('--ink',config.colors.ink);document.querySelector('.preview').style.background=config.colors.paper;document.querySelector('.sample').style.background=config.colors.white;document.querySelector('.sample').style.color=config.colors.ink;document.querySelector('.preview h2').style.fontFamily=config.font;$('previewButton').style.background=config.colors.ink;$('previewButton').style.color=config.colors.white}
+function fill(){['ink','paper','accent','white'].forEach(k=>$(k).value=config.colors[k]);$('font').value=config.font;$('heroTitle').value=config.heroTitle;$('heroSubtitle').value=config.heroSubtitle;renderSections();renderBlocks();preview()}
+async function save(){
+ const btn=$('save');btn.disabled=true;status('Salvataggio in corso…');
+ try{
+  const {data:sessionData}=await db.auth.getSession();const user=sessionData?.session?.user;if(!user)throw new Error('Sessione scaduta. Accedi di nuovo.');
+  const payload={setting_key:'homepage',setting_value:config,updated_by:user.id,updated_at:new Date().toISOString()};
+  const {error}=await db.from('site_settings').upsert(payload,{onConflict:'setting_key'});if(error)throw error;
+  status('Modifiche salvate. La homepage online userà la nuova configurazione.');
+ }catch(e){console.error(e);status(e.message?.includes('site_settings')?'La tabella editor non è ancora attiva: applicare la migrazione prima di salvare.':'Salvataggio non riuscito. Verifica accesso admin e migrazione.')}
+ finally{btn.disabled=false}
+}
+async function init(){
+ const {data,error}=await db.auth.getSession();if(error||!data.session){status('Accedi con un account amministratore AUREN.');return}
+ const {data:profile,error:pe}=await db.from('profiles').select('account_type').eq('id',data.session.user.id).maybeSingle();
+ if(pe||profile?.account_type!=='admin'){status('Accesso negato: serve un account admin.');return}
+ const {data:row,error:se}=await db.from('site_settings').select('setting_value').eq('setting_key','homepage').maybeSingle();
+ if(!se&&row?.setting_value)config={...structuredClone(defaults),...row.setting_value,colors:{...defaults.colors,...row.setting_value.colors}};
+ else if(se)status('Editor pronto in modalità anteprima. Per salvare online va attivata la migrazione dedicata.');
+ $('editor').hidden=false;bind();fill();
+}
+init().catch(e=>{console.error(e);status('Errore durante il caricamento dell’editor.')});
+})();
+</script></body></html>

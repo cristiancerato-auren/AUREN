@@ -31,7 +31,13 @@
       notify('Non è stato possibile caricare gli annunci. Riprova più tardi.');
       return;
     }
-    listings = (data || []).map(p => ({
+    const resolved = await Promise.all((data || []).map(async p => ({
+      ...p,
+      image_url: window.AURENStorage
+        ? await window.AURENStorage.resolveImageUrl(db, p.image_url)
+        : p.image_url || ''
+    })));
+    listings = resolved.map(p => ({
       id: p.id,
       title: p.title,
       location: p.city || '',
@@ -175,13 +181,20 @@
     const button = $('newsletterForm').querySelector('button');
     button.disabled = true;
     try {
-      const { error } = await db.from('newsletter_subscribers').insert({ email });
+      const consent = $('newsletterConsent');
+    if (!consent?.checked) { notify('Per iscriverti devi confermare il consenso alla newsletter.'); return; }
+    const { error } = await db.from('newsletter_subscribers').insert({ email, consent_version: '2026-11-24' });
       if (error && !String(error.message).toLowerCase().includes('duplicate')) throw error;
       $('newsletterForm').reset();
       notify('Grazie: iscrizione alla newsletter AUREN registrata.');
     } catch (error) {
       console.error('AUREN newsletter:', error.message);
-      notify('Iscrizione non riuscita. Se eri già iscritto, sei già nella lista.');
+      const detail = String(error?.message || '').toLowerCase();
+      if (detail.includes('consent_version') || detail.includes('schema cache')) {
+        notify('Newsletter in attivazione: il database deve ancora essere aggiornato. Nessuna iscrizione è stata registrata.');
+      } else {
+        notify('Iscrizione non riuscita. Se eri già iscritto, sei già nella lista.');
+      }
     } finally {
       button.disabled = false;
     }
@@ -199,7 +212,11 @@
       const article = button.closest('.service-card');
       if (article) {
         const priceEl = article.querySelector('.service-price');
-        if (priceEl) priceEl.innerHTML = '€ ' + Number(service.price).toLocaleString('it-IT') + ' <small>/ da</small>';
+        if (priceEl) {
+        const suffix = document.createElement('small');
+        suffix.textContent = ' / da';
+        priceEl.replaceChildren(document.createTextNode('€ ' + Number(service.price).toLocaleString('it-IT')), suffix);
+      }
       }
     });
   }
